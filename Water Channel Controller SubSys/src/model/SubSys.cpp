@@ -7,7 +7,7 @@ SubSys::SubSys() {
     button = new ButtonImpl(BTN_PIN);
 }
 
-int SubSys::getDistance() {
+int SubSys::getWaterDistance() {
     return distanceSensor->getDistance();
 }
 
@@ -21,4 +21,12 @@ ServoM *SubSys::getServoMotor() {
 
 Lcd *SubSys::getLcd() {
     return lcd;
+}
+
+void SubSys::changeMode() {
+    manuelMode = !manuelMode;
+}
+
+bool SubSys::isManuelMode() {
+    return manuelMode;
 }
