@@ -3,11 +3,12 @@
 
 #include "Config.h"
 #include "components/button/Button.h"
-#include "src/components/servo/ServoMImpl.h"
-#include "src/components/distantiometer/Sonar.h"
+#include "components/servo/ServoMImpl.h"
+#include "components/distantiometer/Sonar.h"
 #include "components/lcd/Lcd.h"
 #include "components/lcd/LcdI2C.h"
 #include "components/button/ButtonImpl.h"
+#include "components/distantiometer/DistanceSensor.h"
 
 class SubSys {
     private:
@@ -15,13 +16,16 @@ class SubSys {
         ServoM *servoMotor;
         Lcd *lcd;
         Button *button;
+        bool manuelMode;
 
     public:
         SubSys();
-        int getDistance();
+        int getWaterDistance();
         bool isButtonPressed();
         ServoM *getServoMotor();
         Lcd *getLcd();
+        void changeMode();
+        bool isManuelMode();
 };
 
 #endif

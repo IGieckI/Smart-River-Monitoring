@@ -1,12 +1,13 @@
 #include <Arduino.h>
 #include "config.h"
-#include <Wire.h>
-#include <LiquidCrystal_I2C.h>
+#include "Scheduler.h"
+
+Scheduler *scheduler;
 
 void setup() {
     
 }
 
 void loop() {
-    
+    scheduler->schedule();
 }
