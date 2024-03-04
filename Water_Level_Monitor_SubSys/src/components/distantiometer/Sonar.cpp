@@ -1,6 +1,11 @@
 #include "Sonar.h"
 
-Sonar::Sonar(unsigned short echoP, unsigned short trigP) : DistanceSensor(new Pin[2]{Pin(trigP, OUTPUT), Pin(echoP, INPUT)}, 2) { }
+Sonar::Sonar(unsigned short echoP, unsigned short trigP, long maxTime) : DistanceSensor(new Pin[2]{Pin(trigP, OUTPUT), Pin(echoP, INPUT)}, 2) { 
+    
+    /* AGGIUNGERE IL MAX DIST MANAGEMENT*/
+    
+    timeOut = maxTime;
+}
 
 float Sonar::getDistance() {
     digitalWrite(pins[0].getPinNumber(), LOW);

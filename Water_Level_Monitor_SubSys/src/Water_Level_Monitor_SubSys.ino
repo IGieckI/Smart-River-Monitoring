@@ -73,13 +73,13 @@ void loop() {
   client.loop();
 }
 
-void communication_task( void * parameter ){
+void communication_task_fun( void * parameter ){
   for(;;){
 
   }
 }
 
-void data_task( void * parameter ){
+void data_task_fun( void * parameter ){
   for(;;){
     
     delay(millis_data_frequency);
