@@ -7,9 +7,8 @@
 
 const unsigned short BTN_PIN = 7;
 const unsigned short SERVO_PIN = 6;
-const unsigned short SERVO_PIN = 3;
-const unsigned short DISTANCE_SENSOR_ECHO_PIN /* to set */;
-const unsigned short DISTANCE_SENSOR_TRIG_PIN /* to set */;
-const unsigned short MAX_DISTANCE_TIME /* to set */;
+const unsigned short DISTANCE_SENSOR_ECHO_PIN = 0;
+const unsigned short DISTANCE_SENSOR_TRIG_PIN = 0;
+const unsigned short MAX_DISTANCE_TIME = 0;
 
 #endif

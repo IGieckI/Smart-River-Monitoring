@@ -8,15 +8,15 @@ ModeTask::ModeTask(int period, SubSys *sys) : Task(period, sys) {
 void ModeTask::tick() {
     switch (state)
     {
-    case State::MANUAL:
-        
-        if (sys->isManuelMode()) {
+    case State::MANUAL: 
+        Serial.println("MANUAL");
+        if (sys->isManuelMode() == false) {
             state = State::AUTO;
         }    
         break;
     case State::AUTO:
-
-        if (sys->isManuelMode()) {
+        Serial.println("AUTO");
+        if (sys->isManuelMode() == true) {
             state = State::MANUAL;
         }
         break;

@@ -4,7 +4,7 @@ SubSys::SubSys() {
     distanceSensor = new Sonar(DISTANCE_SENSOR_ECHO_PIN, DISTANCE_SENSOR_TRIG_PIN, MAX_DISTANCE_TIME);
     servoMotor = new ServoMImpl(SERVO_PIN);
     lcd = new LcdI2C();
-    button = new ButtonImpl(BTN_PIN);
+    button = new ButtonImpl(7);
 }
 
 int SubSys::getWaterDistance() {
