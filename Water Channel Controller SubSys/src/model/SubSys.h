@@ -9,6 +9,7 @@
 #include "components/lcd/LcdI2C.h"
 #include "components/button/ButtonImpl.h"
 #include "components/distantiometer/DistanceSensor.h"
+#include "components/msg/MsgService.h"
 
 class SubSys {
     private:
@@ -17,7 +18,6 @@ class SubSys {
         Lcd *lcd;
         Button *button;
         bool manuelMode;
-
     public:
         SubSys();
         int getWaterDistance();

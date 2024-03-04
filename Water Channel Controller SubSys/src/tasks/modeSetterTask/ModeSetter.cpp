@@ -8,7 +8,6 @@ void ModeSetterTask::tick() {
     switch (btnState)
     {
     case ButtonState::NOT_PRESSED:
-
         if (this->sys->isButtonPressed()) {
             btnState = ButtonState::IN_PRESSING;
         }
