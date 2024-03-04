@@ -1,9 +1,12 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 
+TaskHandle_t communication_task, data_task;
+
 const char* ssid = "Antonelli";
 const char* password = "b8R8!(z534NK}o~";
 const char* mqtt_server = "192.168.1.53";
+const int millis_data_frequency = 500;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -68,4 +71,17 @@ void loop() {
     reconnect();
   }
   client.loop();
+}
+
+void communication_task( void * parameter ){
+  for(;;){
+
+  }
+}
+
+void data_task( void * parameter ){
+  for(;;){
+    
+    delay(millis_data_frequency);
+  }
 }
