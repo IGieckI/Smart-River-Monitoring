@@ -1,7 +1,7 @@
 #include <Arduino.h>
-#include "component/Component.h"
+#include "components/Component.h"
 
-
+Component *component;
 
 const int F = 0.5;
 
@@ -12,6 +12,7 @@ const int led_1 = 4;
 const int led_2 = 5;
 
 void setup() {
+  component = new Component();
   Serial.begin(115200); 
   pinMode(led_1, OUTPUT);
   pinMode(led_2, OUTPUT);
