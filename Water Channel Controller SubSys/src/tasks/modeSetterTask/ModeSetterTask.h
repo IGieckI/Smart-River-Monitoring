@@ -5,7 +5,13 @@
 
 class ModeSetterTask : public Task {
     private:
-        bool btnPressed;
+        enum ButtonState {
+            NOT_PRESSED,
+            IN_PRESSING,
+            PRESSED
+        };
+        bool btnState;
+        ButtonState buttonState;
     public:
         ModeSetterTask(int period, SubSys *sys);
         void tick();
