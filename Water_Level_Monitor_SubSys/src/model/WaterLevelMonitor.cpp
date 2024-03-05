@@ -1,32 +1,25 @@
 #include "WaterLevelMonitor.h"
 
 WaterLevelMonitor::WaterLevelMonitor() {
-    led1 = new Led(LED1_PIN);
+    greenLed = new Led(GREEN_LED_PIN);
+    redLed = new Led(RED_LED_PIN);
     distanceSensor = new Sonar(DISTANCE_SENSOR_ECHO_PIN, DISTANCE_SENSOR_TRIG_PIN, MAX_DISTANCE_TIME);
+}
+
+Led *WaterLevelMonitor::getGreenLed() {
+    return greenLed;
+}
+
+Led *WaterLevelMonitor::getRedLed() {
+    return redLed;
+}
+
+int WaterLevelMonitor::getWaterLevel() {
+    int distance = distanceSensor->getDistance();
     
-    systemState = SystemState::OFFLINE;
-}
-
-Led *WaterLevelMonitor::getLed1() {
-    return led1;
-}
-
-Led *WaterLevelMonitor::getLed2() {
-    return led2;
-}
-
-int WaterLevelMonitor::getDistance() {
-    return distanceSensor->getDistance();
-}
-
-SystemState WaterLevelMonitor::getState() {
-    return systemState;
-}
-
-void WaterLevelMonitor::setState(SystemState newState) {
-    systemState = newState;
-}
-
-int WaterLevelMonitor::getCarWashed() {
-    return carWashed;
+    if (distance < MIN_DISTANCE) {
+        return 0;
+    } else {
+        return distance;
+    }
 }

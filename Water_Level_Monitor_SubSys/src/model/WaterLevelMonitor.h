@@ -5,29 +5,19 @@
 #include "components/distantiometer/Sonar.h"
 #include "components/light/Led.h"
 
-enum SystemState {
-    OFFLINE,
-    ONLINE
-};
-
 class WaterLevelMonitor {
     private:
-        SystemState systemState;
-
-        Led *led1;
-        Led *led2;
+        Led *greenLed;
+        Led *redLed;
         DistanceSensor *distanceSensor;
         
         int carWashed;
     
     public:
         WaterLevelMonitor();
-        Led *getLed1();
-        Led *getLed2();
-        int getDistance();
-        SystemState getState();
-        void setState(SystemState newState);
-        int getCarWashed();
+        Led *getGreenLed();
+        Led *getRedLed();
+        int getWaterLevel();
 };
 
 #endif
