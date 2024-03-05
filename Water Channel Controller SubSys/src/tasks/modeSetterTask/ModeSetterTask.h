@@ -10,7 +10,6 @@ class ModeSetterTask : public Task {
             IN_PRESSING,
             PRESSED
         };
-        bool btnState;
         ButtonState buttonState;
     public:
         ModeSetterTask(int period, SubSys *sys);

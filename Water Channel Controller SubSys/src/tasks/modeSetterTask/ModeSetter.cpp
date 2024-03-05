@@ -1,25 +1,28 @@
 #include "tasks/modeSetterTask/ModeSetterTask.h"
 
 ModeSetterTask::ModeSetterTask(int period, SubSys *sys) : Task(period, sys) {
-    this->btnState = ButtonState::NOT_PRESSED;
+    this->buttonState = ButtonState::NOT_PRESSED;
 }
 
 void ModeSetterTask::tick() {
-    switch (btnState)
+    switch (buttonState)
     {
     case ButtonState::NOT_PRESSED:
+        Serial.println("Button not pressed");
         if (this->sys->isButtonPressed()) {
-            btnState = ButtonState::IN_PRESSING;
+            buttonState = ButtonState::IN_PRESSING;
         }
         break;
     case ButtonState::IN_PRESSING:
+        Serial.println("Button in pressing");
         if (!this->sys->isButtonPressed()) {
-            btnState = ButtonState::PRESSED;
+            buttonState = ButtonState::PRESSED;
         }
         break;
     case ButtonState::PRESSED:
-            this->sys->changeMode();
-            btnState = ButtonState::NOT_PRESSED;
+        Serial.println("Button pressed");
+        this->sys->changeMode();
+        buttonState = ButtonState::NOT_PRESSED;
         break;
     default:
         break;

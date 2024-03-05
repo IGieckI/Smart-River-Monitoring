@@ -5,12 +5,12 @@
 
 class ModeTask : public Task {
     private:
-        enum State 
+        enum ModeState 
         {
             MANUAL,
             AUTO
         };
-        State state;
+        ModeState modeState;
 
         /**
          * Show on screen the mode and the water level.
