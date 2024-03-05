@@ -2,7 +2,7 @@
 #define __CONFIG_H__
 
 // Digital Pins
-#define GREEN_LED_PIN 3
+#define GREEN_LED_PIN 5
 #define RED_LED_PIN 4
 #define DISTANCE_SENSOR_TRIG_PIN 10
 #define DISTANCE_SENSOR_ECHO_PIN 11
