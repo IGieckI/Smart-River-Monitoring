@@ -5,12 +5,14 @@
 WaterLevelMonitor model;
 
 void setup() {
+	delay(3000);
   	Serial.begin(115200);
 	
 	model.getRedLed()->switchLight(true);
 	model.getGreenLed()->switchLight(false);
 
   	model.wifiSetup(WIFI_SSID, WIFI_PASSWORD);
+	//model.ethernetSetup(MAC, IP);
   	model.serverSetup(MQTT_SERVER, MQTT_PORT);
 }
 
@@ -25,7 +27,10 @@ void loop() {
 
 	short waterLevel = model.getWaterLevel();
 
-	model.sendToServer(MQTT_TOPIC, String(waterLevel).c_str());
+	Serial.print("Water level: ");
+	Serial.println(waterLevel);
+
+	model.sendToServer(MQTT_TOPIC, waterLevel);
 
 	delay(UPDATE_FREQUENCY);
 }
