@@ -26,14 +26,16 @@ int WaterLevelMonitor::getWaterLevel() {
 
 void WaterLevelMonitor::wifiSetup(const char *SSID, const char *password) {
     Serial.print("Connecting to ");
-	Serial.println(WIFI_SSID);
+	Serial.println(SSID);
 
-	WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+	WiFi.begin(SSID, password);
 
 	while (WiFi.status() != WL_CONNECTED) {
 		delay(500);
 		Serial.print(".");
 	}
+
+	connectionType = ConnectionType::WIFI;
 	
 	Serial.println("");
 	Serial.println("WiFi connected");
@@ -41,9 +43,45 @@ void WaterLevelMonitor::wifiSetup(const char *SSID, const char *password) {
 	Serial.println(WiFi.localIP());
 }
 
+void WaterLevelMonitor::ethernetSetup(const byte *mac, const int *ipArray) {
+	byte currentMac[6];
+
+	for (int i=0; i<6; i++) {
+		currentMac[i] = mac[i];	
+	}	
+	
+	IPAddress ip(ip[0], ip[1], ip[2], ip[3]);
+	Ethernet.begin(currentMac, ip);
+	
+
+	connectionType = ConnectionType::ETHERNET;
+	Serial.println(ethClient.connected());
+}
+
 void WaterLevelMonitor::serverSetup(const char *domain, int port) {
-    client = PubSubClient(espClient);
+	if (connectionType == WIFI) {
+		client = PubSubClient(wifiClient);
+	} else {
+		client = PubSubClient(ethClient);
+	}
+	
+	Serial.println("---------------------");
+	
+	Serial.println(domain);
+	Serial.println(port);
+
+	Serial.println("---------------------");
+
     client.setServer(domain, port);
+	Serial.println(domain);
+	Serial.println(port);
+	
+	if (client.connect("ESP8266Client")) {
+		Serial.println("Nice");
+	} else {
+		Serial.print("Server connection failed, state: ");
+		Serial.println(client.state());
+	}
 }
 
 void WaterLevelMonitor::reconnect() {
@@ -71,6 +109,12 @@ bool WaterLevelMonitor::isConnectedToServer() {
     return client.connected();
 }
 
-void WaterLevelMonitor::sendToServer(const char *topic, const char *message) {
-    client.publish(topic, message);
+void WaterLevelMonitor::sendToServer(const char *topic, int waterLevel) {
+	JsonDocument doc;
+	doc["water_level"] = waterLevel;
+	char mqtt_message[128];
+	serializeJson(doc, mqtt_message);
+
+    Serial.println(client.publish("water_level", "{ \"level\": 10 }") ? "Message sent" : "Message failed");
+	Serial.println(client.state());
 }
