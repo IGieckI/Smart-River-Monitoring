@@ -15,12 +15,12 @@ void setup() {
 }
 
 void loop() {
-	if (!(model.isConnectedToServer() && model.isConnectedToWifi())) {
-		model.getRedLed()->switchLight(true);
-	  	model.getGreenLed()->switchLight(false);
-  	} else {
+	if (model.isConnectedToServer() && model.isConnectedToWifi()) {
 		model.getGreenLed()->switchLight(true);
 	  	model.getRedLed()->switchLight(false);
+  	} else {
+		model.getRedLed()->switchLight(true);
+	  	model.getGreenLed()->switchLight(false);		
 	}
 
 	short waterLevel = model.getWaterLevel();
