@@ -2,14 +2,14 @@
 #include <Config.h>
 #include "model/WaterLevelMonitor.h"
 
-WaterLevelMonitor model;
+WaterLevelMonitor model(RED_LED_PIN, GREEN_LED_PIN, DISTANCE_SENSOR_ECHO_PIN, DISTANCE_SENSOR_TRIG_PIN, MAX_DISTANCE_TIME);
 
 void setup() {
-	delay(3000);
+	delay(1000);
   	Serial.begin(115200);
-	
-	model.getRedLed()->switchLight(true);
-	model.getGreenLed()->switchLight(false);
+
+	model.switchRedLed(true);
+	model.switchGreenLed(false);
 
   	model.wifiSetup(WIFI_SSID, WIFI_PASSWORD);
 	//model.ethernetSetup(MAC, IP);
@@ -18,14 +18,14 @@ void setup() {
 
 void loop() {
 	if (model.isConnectedToServer() && model.isConnectedToWifi()) {
-		model.getGreenLed()->switchLight(true);
-	  	model.getRedLed()->switchLight(false);
+		model.switchGreenLed(true);
+	  	model.switchRedLed(false);
   	} else {
-		model.getRedLed()->switchLight(true);
-	  	model.getGreenLed()->switchLight(false);		
+		model.switchRedLed(true);
+	  	model.switchGreenLed(false);
 	}
 
-	short waterLevel = model.getWaterLevel();
+	short waterLevel = model.getWaterLevel(MIN_DISTANCE);
 
 	Serial.print("Water level: ");
 	Serial.println(waterLevel);

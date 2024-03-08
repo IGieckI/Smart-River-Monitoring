@@ -20,10 +20,7 @@
 #define WIFI_SSID "Focantenna"//"SmartRiverMonitoring"
 #define WIFI_PASSWORD "zprv9600"//"password123"
 
-const byte MAC[] = { 0x7c, 0xdf, 0xa1, 0xe0, 0x7a, 0x84 };
-const int IP[] = { 192, 168, 1, 3 }; // !! This will change depending on the network !!
-
-#define MQTT_SERVER "192.168.175.88"//"192.168.1.53"
+#define MQTT_SERVER "192.168.175.88" //"192.168.1.252"
 #define MQTT_PORT 8883
 #define MQTT_TOPIC "water_level"
 
