@@ -1,23 +1,23 @@
 #include "WaterLevelMonitor.h"
 
-WaterLevelMonitor::WaterLevelMonitor() {
-    greenLed = new Led(GREEN_LED_PIN);
-    redLed = new Led(RED_LED_PIN);
-    distanceSensor = new Sonar(DISTANCE_SENSOR_ECHO_PIN, DISTANCE_SENSOR_TRIG_PIN, MAX_DISTANCE_TIME);
+WaterLevelMonitor::WaterLevelMonitor(uint8_t redLedPin, uint8_t greenLedPin, uint8_t echoPin, uint8_t trigPin, int maxDistanceTime) {
+    greenLed = new Led(greenLedPin);
+    redLed = new Led(redLedPin);
+    distanceSensor = new Sonar(echoPin, trigPin, maxDistanceTime);
 }
 
-Led *WaterLevelMonitor::getGreenLed() {
-    return greenLed;
+void WaterLevelMonitor::switchGreenLed(bool state) {
+    greenLed->switchLight(state);
 }
 
-Led *WaterLevelMonitor::getRedLed() {
-    return redLed;
+void WaterLevelMonitor::switchRedLed(bool state) {
+    redLed->switchLight(state);
 }
 
-int WaterLevelMonitor::getWaterLevel() {
+int WaterLevelMonitor::getWaterLevel(int minDistance) {
     int distance = distanceSensor->getDistance();
     
-    if (distance < MIN_DISTANCE) {
+    if (distance < minDistance) {
         return 0;
     } else {
         return distance;
@@ -34,8 +34,6 @@ void WaterLevelMonitor::wifiSetup(const char *SSID, const char *password) {
 		delay(500);
 		Serial.print(".");
 	}
-
-	connectionType = ConnectionType::WIFI;
 	
 	Serial.println("");
 	Serial.println("WiFi connected");
@@ -43,45 +41,26 @@ void WaterLevelMonitor::wifiSetup(const char *SSID, const char *password) {
 	Serial.println(WiFi.localIP());
 }
 
-void WaterLevelMonitor::ethernetSetup(const byte *mac, const int *ipArray) {
-	byte currentMac[6];
-
-	for (int i=0; i<6; i++) {
-		currentMac[i] = mac[i];	
-	}	
-	
-	IPAddress ip(ip[0], ip[1], ip[2], ip[3]);
-	Ethernet.begin(currentMac, ip);
-	
-
-	connectionType = ConnectionType::ETHERNET;
-	Serial.println(ethClient.connected());
-}
-
 void WaterLevelMonitor::serverSetup(const char *domain, int port) {
-	if (connectionType == WIFI) {
-		client = PubSubClient(wifiClient);
-	} else {
-		client = PubSubClient(ethClient);
-	}
+	client = PubSubClient();
 	
 	Serial.println("---------------------");
-	
+	Serial.println("Server setup\n");
 	Serial.println(domain);
 	Serial.println(port);
 
 	Serial.println("---------------------");
-
+	delay(100);
     client.setServer(domain, port);
-	Serial.println(domain);
-	Serial.println(port);
-	
-	if (client.connect("ESP8266Client")) {
-		Serial.println("Nice");
-	} else {
+	while(!client.connect("ESP8266Client")) {
+		Serial.println("Emmh");
+		Serial.println(isConnectedToWifi() ? "WiFi connected" : "WiFi not connected");
 		Serial.print("Server connection failed, state: ");
 		Serial.println(client.state());
+		delay(500);
 	}
+
+	Serial.println("Nice");
 }
 
 void WaterLevelMonitor::reconnect() {
@@ -90,7 +69,6 @@ void WaterLevelMonitor::reconnect() {
 
 		if (client.connect("ESP8266Client")) {
 			Serial.println("connected");
-			client.subscribe(MQTT_TOPIC);
 		} else {
 			Serial.print("failed, rc=");
 			Serial.print(client.state());
@@ -115,6 +93,6 @@ void WaterLevelMonitor::sendToServer(const char *topic, int waterLevel) {
 	char mqtt_message[128];
 	serializeJson(doc, mqtt_message);
 
-    Serial.println(client.publish("water_level", "{ \"level\": 10 }") ? "Message sent" : "Message failed");
+    Serial.println(client.publish(topic, mqtt_message) ? "Message sent" : "Message failed");
 	Serial.println(client.state());
 }
