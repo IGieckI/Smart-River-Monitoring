@@ -13,7 +13,7 @@ void setup() {
     Serial.begin(9600);
     scheduler.init(100);
 
-    Task *modeSetterTask = new ModeSetterTask(50, sys);
+    Task *modeSetterTask = new ModeSetterTask(100, sys);
     modeSetterTask->setName("ModeSetterTask");
     scheduler.addTask(modeSetterTask);
 
@@ -25,14 +25,6 @@ void setup() {
 
 }
 
-void sendRandomDataForTesting() {
-    // 0-100 % dell'apertura della valvola definita da remoto
-    char dataOut[100];
-    sprintf(dataOut, "{\"valve\": \"%d\"}", random(0, 100));
-    Serial.println(dataOut);
-}
-
 void loop() {
-    sendRandomDataForTesting();
     scheduler.schedule();
 }

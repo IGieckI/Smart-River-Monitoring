@@ -2,6 +2,7 @@
 #define _MODE_TASK_H_
 
 #include "tasks/Task.h"
+#include <ArduinoJson.h>
 
 class ModeTask : public Task {
     private:
@@ -11,6 +12,8 @@ class ModeTask : public Task {
             AUTO
         };
         ModeState modeState;
+
+        JsonDocument doc;
 
         /**
          * Show on screen the mode and the water level.

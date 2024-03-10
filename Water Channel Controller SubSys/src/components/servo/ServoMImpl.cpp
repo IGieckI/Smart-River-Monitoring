@@ -8,9 +8,9 @@ ServoMImpl::ServoMImpl(unsigned short pin) : ServoM(pin) {
 
 void ServoMImpl::setPosition(int _angle) {
     angle = _angle;
-    if (angle > CLOSE_GATE_DEGREE) {
+    if (angle > OPEN_GATE_DEGREE) {
         angle = CLOSE_GATE_DEGREE;
-    } else if (angle < OPEN_GATE_DEGREE) {
+    } else if (angle < CLOSE_GATE_DEGREE) {
         angle = OPEN_GATE_DEGREE;
     }
 
