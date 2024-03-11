@@ -6,7 +6,7 @@
 class PotentiometerImpl : public Potentiometer {
     public:
         PotentiometerImpl(unsigned short pin);
-        virtual int getValue();
+        int getValue();
 };
 
 #endif
