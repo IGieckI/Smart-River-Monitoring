@@ -10,18 +10,6 @@ ModeTask::ModeTask(int period, SubSys *sys) : Task(period, sys) {
     
 }
 
-void ModeTask::setGateByValve() {
-    /* TO DO */
-}
-
-void ModeTask::showOnScreen(char *mode, float waterLevel) {
-    this->sys->getLcd()->clearScreen();
-    this->sys->getLcd()->displayText(mode);
-    this->sys->getLcd()->newLine();
-    this->sys->getLcd()->displayText("WaterLevel: ");
-    this->sys->getLcd()->displayText(String(waterLevel).c_str());
-}
-
 void ModeTask::tick() {
     switch (modeState)
     {
@@ -38,12 +26,14 @@ void ModeTask::tick() {
             Msg* msg = MsgService.receiveMsg();    
             deserializeJson(doc, msg->getContent());
             int valveValue = doc[String("valve")];
-            // showOnScreen("AUTO", doc["valve"]);
-            // map the valveValue from 0-100 to 70-180
             Serial.println(String(valveValue).c_str());
             valveValue = map(valveValue, 100, 0, CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE);
             Serial.println(String(valveValue).c_str());
             this->sys->getServoMotor()->setPosition(valveValue);
+            
+            /* show on lcd valve openening value*/
+            this->sys->getLcd()->newLine();
+            this->sys->getLcd()->displayText(String(valveValue).c_str());
             delete msg;
         }
 

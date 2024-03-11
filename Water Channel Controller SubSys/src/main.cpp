@@ -20,9 +20,6 @@ void setup() {
     Task *modeTask = new ModeTask(200, sys);
     modeTask->setName("ModeTask");
     scheduler.addTask(modeTask);
-    // gen random value from 0 to 100
-    randomSeed(analogRead(0));
-
 }
 
 void loop() {
