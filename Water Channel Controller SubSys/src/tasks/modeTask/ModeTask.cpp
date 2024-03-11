@@ -14,6 +14,13 @@ void ModeTask::tick() {
     switch (modeState)
     {
     case ModeState::MANUAL : 
+
+        int potValue = this->sys->getPotentiometer()->getValue();
+        Serial.println(potValue);
+        int valveValue = map(potValue, 0, 100, OPEN_GATE_DEGREE, CLOSE_GATE_DEGREE);
+        Serial.println(valveValue);
+        this->sys->getServoMotor()->setPosition(valveValue);
+
         if (sys->isManuelMode() == false) {
             modeState = ModeState::AUTO;
             this->sys->getLcd()->clearScreen();

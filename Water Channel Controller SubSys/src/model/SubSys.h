@@ -10,6 +10,8 @@
 #include "components/button/ButtonImpl.h"
 #include "components/distantiometer/DistanceSensor.h"
 #include "components/msg/MsgService.h"
+#include "components/potentiometer/Potentiometer.h"
+#include "components/potentiometer/PotentiometerImpl.h"
 
 class SubSys {
     private:
@@ -17,6 +19,7 @@ class SubSys {
         ServoM *servoMotor;
         Lcd *lcd;
         Button *button;
+        Potentiometer *potentiometer;
         bool manuelMode;
     public:
         SubSys();
@@ -26,6 +29,7 @@ class SubSys {
         Lcd *getLcd();
         void changeMode();
         bool isManuelMode();
+        Potentiometer *getPotentiometer();
 };
 
 #endif
