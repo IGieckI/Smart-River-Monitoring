@@ -17,6 +17,7 @@ class LcdI2C : public Lcd {
         virtual void displayText(const char* text);
         virtual void newLine();
         virtual void clearScreen();
+        virtual void setPosition(int row, int col);
 };
 
 #endif

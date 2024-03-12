@@ -6,7 +6,11 @@
 class PotentiometerImpl : public Potentiometer {
     public:
         PotentiometerImpl(unsigned short pin);
-        int getValue();
+        
+        /**
+         * Return the potentiometer value in range 0-100.
+        */
+        virtual int getValue();
 };
 
 #endif

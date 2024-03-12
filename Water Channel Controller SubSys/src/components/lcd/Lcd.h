@@ -10,6 +10,7 @@ class Lcd : public Component {
         virtual void displayText(const char* text) = 0;
         virtual void newLine() = 0;
         virtual void clearScreen() = 0;
+        virtual void setPosition(int row, int col) = 0;
 };
 
 #endif

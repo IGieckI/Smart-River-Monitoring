@@ -2,7 +2,7 @@
 #define SERVOIMPL_H
 
 const int CLOSE_GATE_DEGREE = 0;
-const int OPEN_GATE_DEGREE = 270;
+const int OPEN_GATE_DEGREE = 170;
 
 #include "ServoM.h"
 #include <ServoTimer2.h>

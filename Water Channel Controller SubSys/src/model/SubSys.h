@@ -19,7 +19,7 @@ class SubSys {
         ServoM *servoMotor;
         Lcd *lcd;
         Button *button;
-        Potentiometer *potentiometer;
+        PotentiometerImpl *potentiometer;
         bool manuelMode;
     public:
         SubSys();

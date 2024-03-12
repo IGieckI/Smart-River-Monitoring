@@ -12,7 +12,6 @@ LcdI2C::LcdI2C(unsigned short I2CAddress, int columns, int rows, unsigned short 
 LcdI2C::LcdI2C(Pin pins[], int numPins) : Lcd(pins, numPins) { }
 
 void LcdI2C::displayText(const char* text) {
-    this->lcd.setCursor(col, row);
     lcd.print(text);
 }
 
@@ -24,4 +23,8 @@ void LcdI2C::clearScreen() {
     lcd.clear();
     col = 0;
     row = 0;
+}
+
+void LcdI2C::setPosition(int row, int col) {
+    this->lcd.setCursor(col, row);
 }
