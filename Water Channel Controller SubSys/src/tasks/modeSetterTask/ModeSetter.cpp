@@ -1,11 +1,27 @@
 #include "tasks/modeSetterTask/ModeSetterTask.h"
 
 ModeSetterTask::ModeSetterTask(int period, SubSys *sys) : Task(period, sys) {
-    this->setName("ModeSetterTask");
+    this->buttonState = ButtonState::NOT_PRESSED;
 }
 
 void ModeSetterTask::tick() {
-    if (this->sys->isButtonPressed()) {
+    switch (buttonState)
+    {
+    case ButtonState::NOT_PRESSED:
+        if (this->sys->isButtonPressed()) {
+            buttonState = ButtonState::IN_PRESSING;
+        }
+        break;
+    case ButtonState::IN_PRESSING:
+        if (!this->sys->isButtonPressed()) {
+            buttonState = ButtonState::PRESSED;
+        }
+        break;
+    case ButtonState::PRESSED:
         this->sys->changeMode();
+        buttonState = ButtonState::NOT_PRESSED;
+        break;
+    default:
+        break;
     }
 }

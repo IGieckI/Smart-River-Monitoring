@@ -2,15 +2,19 @@
 #define _MODE_TASK_H_
 
 #include "tasks/Task.h"
+#include <ArduinoJson.h>
 
 class ModeTask : public Task {
     private:
-        enum State 
+        enum ModeState 
         {
             MANUAL,
             AUTO
         };
-        State state;
+        ModeState modeState;
+
+        JsonDocument doc;
+
     public:
         ModeTask(int period, SubSys *sys);
         void tick();

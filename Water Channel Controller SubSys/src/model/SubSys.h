@@ -9,6 +9,9 @@
 #include "components/lcd/LcdI2C.h"
 #include "components/button/ButtonImpl.h"
 #include "components/distantiometer/DistanceSensor.h"
+#include "components/msg/MsgService.h"
+#include "components/potentiometer/Potentiometer.h"
+#include "components/potentiometer/PotentiometerImpl.h"
 
 class SubSys {
     private:
@@ -16,8 +19,8 @@ class SubSys {
         ServoM *servoMotor;
         Lcd *lcd;
         Button *button;
+        PotentiometerImpl *potentiometer;
         bool manuelMode;
-
     public:
         SubSys();
         int getWaterDistance();
@@ -26,6 +29,7 @@ class SubSys {
         Lcd *getLcd();
         void changeMode();
         bool isManuelMode();
+        Potentiometer *getPotentiometer();
 };
 
 #endif

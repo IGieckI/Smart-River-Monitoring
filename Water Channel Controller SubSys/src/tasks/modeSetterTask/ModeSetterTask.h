@@ -5,9 +5,19 @@
 
 class ModeSetterTask : public Task {
     private:
-        bool btnPressed;
+        enum ButtonState {
+            NOT_PRESSED,
+            IN_PRESSING,
+            PRESSED
+        };
+        ButtonState buttonState;
     public:
         ModeSetterTask(int period, SubSys *sys);
+
+        /**
+         * The user can change the mode by pressing the button.
+         * The state will change effectively when the button is released.
+        */
         void tick();
 };
 

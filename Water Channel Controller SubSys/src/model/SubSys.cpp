@@ -3,8 +3,10 @@
 SubSys::SubSys() {
     distanceSensor = new Sonar(DISTANCE_SENSOR_ECHO_PIN, DISTANCE_SENSOR_TRIG_PIN, MAX_DISTANCE_TIME);
     servoMotor = new ServoMImpl(SERVO_PIN);
-    lcd = new LcdI2C();
-    button = new ButtonImpl(BTN_PIN);
+    lcd = new LcdI2C(LCD_ADDR, 16, 2, A4, A5);
+    button = new ButtonImpl(7);
+    potentiometer = new PotentiometerImpl(A0);
+    manuelMode = false;
 }
 
 int SubSys::getWaterDistance() {
@@ -29,4 +31,8 @@ void SubSys::changeMode() {
 
 bool SubSys::isManuelMode() {
     return manuelMode;
+}
+
+Potentiometer *SubSys::getPotentiometer() {
+    return potentiometer;
 }
