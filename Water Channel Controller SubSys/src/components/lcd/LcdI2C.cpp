@@ -4,6 +4,8 @@ LcdI2C::LcdI2C(unsigned short I2CAddress, int columns, int rows, unsigned short 
     this->lcd = LiquidCrystal_I2C(I2CAddress, columns, rows);
     this->lcd.init();
     this->lcd.backlight();
+    this->col = columns;
+    this->row = rows;
 
     Pin pins[2] = { Pin(sdaPin, OUTPUT), Pin(sclPin, OUTPUT) };
     LcdI2C(pins, 2);
@@ -21,10 +23,15 @@ void LcdI2C::newLine() {
 
 void LcdI2C::clearScreen() {
     lcd.clear();
-    col = 0;
-    row = 0;
 }
 
 void LcdI2C::setPosition(int row, int col) {
     this->lcd.setCursor(col, row);
+}
+
+void LcdI2C::clearLine(int rows) {
+    this->lcd.setCursor(rows, 0);
+    for (uint8_t i = 0; i < this->col; i++) {
+        this->displayText("   ");
+    }
 }

@@ -2,7 +2,6 @@
 
 ModeTask::ModeTask(int period, SubSys *sys) : Task(period, sys) {
     this->modeState = AUTO;
-    this->setName("ModeTask");
     this->sys->getLcd()->clearScreen();
     this->sys->getLcd()->setPosition(0, 0);
     this->sys->getLcd()->displayText("AUTO");
@@ -18,43 +17,43 @@ void ModeTask::tick() {
             
             /* set valve position */
             int valveValue = map(potValue, 0, 100, CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE);
-            Serial.println(valveValue);
 
             /* show on lcd valve openening value */
+            this->sys->getLcd()->clearLine(2);
             this->sys->getLcd()->setPosition(2, 0);
             this->sys->getLcd()->displayText("Valve:");
-            this->sys->getLcd()->setPosition(2, 6);
-            this->sys->getLcd()->displayText("    ");
-            this->sys->getLcd()->setPosition(2, 6);
             this->sys->getLcd()->displayText(String(potValue).c_str());
-
-            Serial.println(valveValue);
+            this->sys->getLcd()->displayText("%");
             this->sys->getServoMotor()->setPosition(valveValue);
+
+            char buffer[100];
+            String state = this->sys->isManuelMode() ? "true" : "false";
+            uint8_t valvePos = map(this->sys->getServoMotor()->getPosition(), CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE, 0, 100);
+            sprintf(buffer, "{ \"manual_control\": \"%s\", \"valve\": \"%d\" }", String(state).c_str(), valvePos);
+            Serial.println(buffer);
 
 
             if (sys->isManuelMode() == false) {
                 modeState = ModeState::AUTO;
+                this->sys->getLcd()->clearLine(0);
                 this->sys->getLcd()->setPosition(0, 0);
                 this->sys->getLcd()->displayText("AUTO");
-                Serial.println("AUTO");
             }    
         }
         break;
     case ModeState::AUTO :
-        Serial.println("auto");
         if (MsgService.isMsgAvailable()) {
             Msg* msg = MsgService.receiveMsg();    
             deserializeJson(doc, msg->getContent());
             int valveValue = doc[String("valve")];
-            Serial.println(String(valveValue).c_str());
+            Serial.println(valveValue);
             
             /* show on lcd valve openening value */
+            this->sys->getLcd()->clearLine(2);
             this->sys->getLcd()->setPosition(2, 0);
             this->sys->getLcd()->displayText("Valve:");
-            this->sys->getLcd()->setPosition(2, 6);
-            this->sys->getLcd()->displayText("    ");
-            this->sys->getLcd()->setPosition(2, 6);
             this->sys->getLcd()->displayText(String(valveValue).c_str());
+            this->sys->getLcd()->displayText("%");
 
             /* set valve position */
             valveValue = map(valveValue, 0, 100, CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE);
@@ -64,11 +63,9 @@ void ModeTask::tick() {
 
         if (sys->isManuelMode() == true) {
             modeState = ModeState::MANUAL;
-            this->sys->getLcd()->setPosition(0, 0);
-            this->sys->getLcd()->displayText("    ");
+            this->sys->getLcd()->clearLine(0);
             this->sys->getLcd()->setPosition(0, 0);
             this->sys->getLcd()->displayText("MANUAL");
-            Serial.println("MANUAL");
         }
         break;
     default:
