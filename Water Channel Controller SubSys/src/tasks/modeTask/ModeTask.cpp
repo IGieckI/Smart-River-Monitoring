@@ -19,11 +19,9 @@ void ModeTask::tick() {
             int valveValue = map(potValue, 0, 100, CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE);
 
             /* show on lcd valve openening value */
-            this->sys->getLcd()->clearLine(2);
-            this->sys->getLcd()->setPosition(2, 0);
-            this->sys->getLcd()->displayText("Valve:");
-            this->sys->getLcd()->displayText(String(potValue).c_str());
-            this->sys->getLcd()->displayText("%");
+            displayInfoOnLcd(potValue);
+
+            /* set gate opening */
             this->sys->getServoMotor()->setPosition(valveValue);
 
             char buffer[100];
@@ -35,7 +33,7 @@ void ModeTask::tick() {
 
             if (sys->isManuelMode() == false) {
                 modeState = ModeState::AUTO;
-                this->sys->getLcd()->clearLine(0);
+                this->sys->getLcd()->clearScreen();
                 this->sys->getLcd()->setPosition(0, 0);
                 this->sys->getLcd()->displayText("AUTO");
             }    
@@ -45,15 +43,10 @@ void ModeTask::tick() {
         if (MsgService.isMsgAvailable()) {
             Msg* msg = MsgService.receiveMsg();    
             deserializeJson(doc, msg->getContent());
-            int valveValue = doc[String("valve")];
-            Serial.println(valveValue);
+            int valveValue = doc["valve"];
             
             /* show on lcd valve openening value */
-            this->sys->getLcd()->clearLine(2);
-            this->sys->getLcd()->setPosition(2, 0);
-            this->sys->getLcd()->displayText("Valve:");
-            this->sys->getLcd()->displayText(String(valveValue).c_str());
-            this->sys->getLcd()->displayText("%");
+            displayInfoOnLcd(valveValue);
 
             /* set valve position */
             valveValue = map(valveValue, 0, 100, CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE);
@@ -63,7 +56,7 @@ void ModeTask::tick() {
 
         if (sys->isManuelMode() == true) {
             modeState = ModeState::MANUAL;
-            this->sys->getLcd()->clearLine(0);
+            this->sys->getLcd()->clearScreen();
             this->sys->getLcd()->setPosition(0, 0);
             this->sys->getLcd()->displayText("MANUAL");
         }
@@ -71,4 +64,11 @@ void ModeTask::tick() {
     default:
         break;
     }
+}
+
+void ModeTask::displayInfoOnLcd(uint8_t val) {
+    this->sys->getLcd()->setPosition(2, 0);
+    this->sys->getLcd()->displayText("Valve:");
+    this->sys->getLcd()->displayText(String(val).c_str());
+    this->sys->getLcd()->displayText("%");
 }

@@ -15,6 +15,10 @@ class ModeTask : public Task {
 
         JsonDocument doc;
 
+        /**
+         * @brief Display the valve opening value on the lcd.
+        */
+        void ModeTask::displayInfoOnLcd(uint8_t val);
     public:
         ModeTask(int period, SubSys *sys);
         void tick();

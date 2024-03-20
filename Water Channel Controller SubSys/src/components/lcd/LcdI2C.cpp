@@ -28,10 +28,3 @@ void LcdI2C::clearScreen() {
 void LcdI2C::setPosition(int row, int col) {
     this->lcd.setCursor(col, row);
 }
-
-void LcdI2C::clearLine(int rows) {
-    this->lcd.setCursor(rows, 0);
-    for (uint8_t i = 0; i < this->col; i++) {
-        this->displayText("   ");
-    }
-}
