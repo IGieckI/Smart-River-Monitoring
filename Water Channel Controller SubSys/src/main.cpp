@@ -17,12 +17,11 @@ void setup() {
     modeSetterTask->setName("ModeSetterTask");
     scheduler.addTask(modeSetterTask);
 
-    Task *modeTask = new ModeTask(200, sys);
+    Task *modeTask = new ModeTask(500, sys);
     modeTask->setName("ModeTask");
     scheduler.addTask(modeTask);
 }
 
 void loop() {
-    Serial.println("loop");
     scheduler.schedule();
 }

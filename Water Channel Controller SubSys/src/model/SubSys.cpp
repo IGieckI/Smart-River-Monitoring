@@ -21,7 +21,7 @@ ServoM *SubSys::getServoMotor() {
     return servoMotor;
 }
 
-Lcd *SubSys::getLcd() {
+LcdI2C *SubSys::getLcd() {
     return lcd;
 }
 
@@ -33,6 +33,6 @@ bool SubSys::isManuelMode() {
     return manuelMode;
 }
 
-Potentiometer *SubSys::getPotentiometer() {
+PotentiometerImpl *SubSys::getPotentiometer() {
     return potentiometer;
 }

@@ -17,8 +17,8 @@ class SubSys {
     private:
         DistanceSensor *distanceSensor;
         ServoM *servoMotor;
-        Lcd *lcd;
-        Button *button;
+        LcdI2C *lcd;
+        ButtonImpl *button;
         PotentiometerImpl *potentiometer;
         bool manuelMode;
     public:
@@ -26,10 +26,10 @@ class SubSys {
         int getWaterDistance();
         bool isButtonPressed();
         ServoM *getServoMotor();
-        Lcd *getLcd();
+        LcdI2C *getLcd();
         void changeMode();
         bool isManuelMode();
-        Potentiometer *getPotentiometer();
+        PotentiometerImpl *getPotentiometer();
 };
 
 #endif
