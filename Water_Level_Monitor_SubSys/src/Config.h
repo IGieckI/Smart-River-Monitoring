@@ -17,10 +17,10 @@
 #define BAUD_RATE 115200
 #define UPDATE_FREQUENCY 1000 // millisecond update frequency time
 
-#define WIFI_SSID "SmartRiverMonitoring"
-#define WIFI_PASSWORD "password123"
+#define WIFI_SSID "Antonelli"//"SmartRiverMonitoring"
+#define WIFI_PASSWORD "b8R8!(z534NK}o~"//"password123"
 
-#define MQTT_SERVER "broker.hivemq.com"
+#define MQTT_SERVER "broker.mqtt-dashboard.com"
 #define MQTT_PORT 1883
 #define MQTT_TOPIC "water_level"
 

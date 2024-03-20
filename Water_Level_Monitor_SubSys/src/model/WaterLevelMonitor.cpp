@@ -14,8 +14,8 @@ void WaterLevelMonitor::switchRedLed(bool state) {
     redLed->switchLight(state);
 }
 
-int WaterLevelMonitor::getWaterLevel(int minDistance) {
-    int distance = distanceSensor->getDistance();
+unsigned short WaterLevelMonitor::getWaterLevel(int minDistance) {
+    unsigned short distance = distanceSensor->getDistance();
     
     if (distance < minDistance) {
         return 0;

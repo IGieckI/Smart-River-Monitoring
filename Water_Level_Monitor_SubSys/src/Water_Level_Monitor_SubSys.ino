@@ -1,113 +1,89 @@
-
 #include <Config.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
-#include <ArduinoJson.h>
 #include "model/WaterLevelMonitor.h"
+#define MSG_BUFFER_SIZE  50
 
 WaterLevelMonitor model(RED_LED_PIN, GREEN_LED_PIN, DISTANCE_SENSOR_ECHO_PIN, DISTANCE_SENSOR_TRIG_PIN, MAX_DISTANCE_TIME);
-WiFiClient wifiClient;
-PubSubClient client(wifiClient);
 
-void setup() {
-	delay(1000);
-  	Serial.begin(115200);
+WiFiClient espClient;
+PubSubClient client(espClient);
 
-	model.switchRedLed(true);
-	model.switchGreenLed(false);
+unsigned long lastMsgTime = 0;
+char msg[MSG_BUFFER_SIZE];
 
-	wifiSetup(WIFI_SSID, WIFI_PASSWORD);
-  	serverSetup(MQTT_SERVER, MQTT_PORT);
-}
 
-void loop() {
-	if (isConnectedToServer() && isConnectedToWifi()) {
-		model.switchGreenLed(true);
-	  	model.switchRedLed(false);
-  	} else {
-		model.switchRedLed(true);
-	  	model.switchGreenLed(false);
-	}
+void setup_wifi() {
+	Serial.println(String("Connecting to ") + WIFI_SSID);
 
-	short waterLevel = model.getWaterLevel(MIN_DISTANCE);
-
-	Serial.print("Water level: ");
-	Serial.println(waterLevel);
-
-	sendToServer(MQTT_TOPIC, waterLevel);
-
-	delay(UPDATE_FREQUENCY);
-}
-
-void wifiSetup(const char *SSID, const char *password) {
-    Serial.print("Connecting to ");
-	Serial.println(SSID);
-
-	WiFi.begin(SSID, password);
+	WiFi.mode(WIFI_STA);
+	WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
 	while (WiFi.status() != WL_CONNECTED) {
 		delay(500);
 		Serial.print(".");
 	}
-	
+
 	Serial.println("");
 	Serial.println("WiFi connected");
 	Serial.println("IP address: ");
 	Serial.println(WiFi.localIP());
 }
 
-void serverSetup(const char *domain, int port) {
-	client = PubSubClient();
-	
-	Serial.println("---------------------");
-	Serial.println("Server setup\n");
-	Serial.println(domain);
-	Serial.println(port);
-
-	Serial.println("---------------------");
-	delay(100);
-    client.setServer(domain, port);
-	while(!client.connect("ESP8266Client")) {
-		Serial.println("Emmh");
-		Serial.println(isConnectedToWifi() ? "WiFi connected" : "WiFi not connected");
-		Serial.print("Server connection failed, state: ");
-		Serial.println(client.state());
-		delay(500);
-	}
-
-	Serial.println("Nice");
-}
-
 void reconnect() {
-	while (!client.connected()) {
-		Serial.print("Attempting MQTT connection...");
+  
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    
+    String clientId = String("esiot-2122-client-")+String(random(0xffff), HEX);
 
-		if (client.connect("ESP8266Client")) {
-			Serial.println("connected");
-		} else {
-			Serial.print("failed, rc=");
-			Serial.print(client.state());
-			Serial.println(" try again in 5 seconds");
-			delay(5000);
-		}
+    if (client.connect(clientId.c_str())) {
+      Serial.println("connected");
+      client.subscribe(MQTT_TOPIC);
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      delay(5000);
+    }
+  }
+}
+
+void setup()	{
+	Serial.begin(115200);
+
+	model.switchRedLed(true);
+	model.switchGreenLed(false);
+
+	setup_wifi();
+	randomSeed(micros());
+
+	client.setServer(MQTT_SERVER, MQTT_PORT);
+}
+
+void loop() {
+
+	if (!client.connected()) {
+		model.switchGreenLed(false);
+		model.switchRedLed(true);
+		reconnect();
 	}
-}
 
-void sendToServer(const char *topic, int waterLevel) {
-	JsonDocument doc;
-	doc["water_level"] = waterLevel;
-	char mqtt_message[128];
-	serializeJson(doc, mqtt_message);
+	model.switchGreenLed(true);
+	model.switchRedLed(false);
+	
+	client.loop();
 
-    Serial.println(client.publish(topic, mqtt_message) ? "Message sent" : "Message failed");
-	Serial.println(client.state());
-}
+	unsigned short waterLevel = model.getWaterLevel(MIN_DISTANCE);
 
-bool isConnectedToWifi() {
-    return WiFi.status() == WL_CONNECTED;
-}
+	unsigned long now = millis();
+	if (now - lastMsgTime > UPDATE_FREQUENCY) {
+		lastMsgTime = now;
 
-bool isConnectedToServer() {
-    client.loop();
-    return client.connected();
+		snprintf (msg, MSG_BUFFER_SIZE, "{ \"water_level\": %ld }", waterLevel);
+
+		Serial.println(String("Sending message: ") + msg);
+
+		client.publish(MQTT_TOPIC, msg);
+	}
 }
