@@ -1,33 +1,33 @@
+import aiomqtt
 import asyncio
-import websockets
-import time
-import json
 from datetime import datetime
-
+import json
+import sys
+import websockets
 
 class SharedState:
+    """A class to store shared state between the server and the clients."""
     def __init__(self):
         self.dashboard_manual = False
         self.hardware_manual = False
-        self.dashboard_open_value = 0
-        self.current_valve_opening = 0
-        self.current_status = 'Fake Status'
-        self.history = [
-            {"value": 10, "datetime": datetime(2024, 3, 30, 8, 0, 0)},
-            {"value": 15, "datetime": datetime(2024, 3, 30, 8, 15, 0)},
-            {"value": 20, "datetime": datetime(2024, 3, 30, 8, 30, 0)},
-            {"value": 25, "datetime": datetime(2024, 3, 30, 8, 45, 0)}
-        ]
+        self.dashboard_open_value = -1
+        self.current_valve_opening = -1
+        self.current_status = 'Waiting for data...'
+        self.history = []
 
+# Store the connected clients in a dictionary
 clients = {}
 
+# Shared instance of the system
 global shared_state
 shared_state = SharedState()
 
-
+# Main loop to send data to connected dashboards
 async def send_data_to_clients():
-    while True:
-        print("reset")
+    while True:        
+        print("Server is running")
+        
+        # Map over HTML elements of the dashboard
         package = {
             'dashboard_manual': shared_state.dashboard_manual,
             'hardware_manual': shared_state.hardware_manual,
@@ -36,29 +36,47 @@ async def send_data_to_clients():
             'current_status': shared_state.current_status,
             'history': shared_state.history
         }
-        for client in clients.values():
+        
+        # Send the data to all connected clients
+        for client in clients:
             try:
-                await client.send(json.dumps(package, default=str))
+                await client.value().send(json.dumps(package, default=str))
             except websockets.exceptions.ConnectionClosed:
-                pass
+                clients.pop(client)
         await asyncio.sleep(1)
 
-async def handle_client(websocket, path):  # Pass shared_state as an argument
+# Handle incoming messages from the clients
+async def handle_client(websocket):
     clients[websocket.remote_address] = websocket
     try:
         async for message in websocket:
                   print(message)
                   update = json.loads(message)
-                  shared_state.dashboard_manual = update['remote_control']  # Access shared_state here
+                  
+                  # IMPROVE SYSTEM MANAGEMENT
+                  
+                  shared_state.dashboard_manual = update['remote_control']
                   shared_state.dashboard_open_value = update['valve']
     finally:
         del clients[websocket.remote_address]
+        
+# Handle incoming messages from the MQTT broker
+async def handle_mqtt_messages(client):
+    await client.subscribe("water_level")
+    async for message in client.messages:
+        print(message.payload)
 
 
 async def main():
-    async with websockets.serve(handle_client, "localhost", 8765):
-        print("Server started.")
-        await send_data_to_clients()
+    # Start the web server and the MQTT client
+    server = websockets.serve(handle_client, "localhost", 8765)
+    async with aiomqtt.Client("broker.hivemq.com", 1883) as client:
+        mqtt_task = asyncio.create_task(handle_mqtt_messages(client))
+        await asyncio.gather(server, send_data_to_clients(), mqtt_task)
 
+# Changed loop type to run the server on Windows
+if sys.platform.lower() == "win32" or os.name.lower() == "nt":
+    from asyncio import set_event_loop_policy, WindowsSelectorEventLoopPolicy
+    set_event_loop_policy(WindowsSelectorEventLoopPolicy())
 
 asyncio.run(main())
