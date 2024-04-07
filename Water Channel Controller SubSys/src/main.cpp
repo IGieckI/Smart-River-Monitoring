@@ -9,6 +9,7 @@ Scheduler scheduler;
 SubSys *sys;
 
 void setup() {
+    Serial.begin(9600);
     sys = new SubSys();
     Serial.begin(9600);
     scheduler.init(100);
