@@ -4,6 +4,10 @@ from datetime import datetime
 import json
 import sys
 import websockets
+import serial
+import serial.tools.list_ports as port_list
+import random
+import time
 
 class SharedState:
     """A class to store shared state between the server and the clients."""
@@ -21,12 +25,16 @@ clients = {}
 # Shared instance of the system
 global shared_state
 shared_state = SharedState()
+ports = list(port_list.comports())
+for p in ports:
+    print (p)
+
+ser = serial.Serial(ports[2].device, 9600)
+time.sleep(2)
 
 # Main loop to send data to connected dashboards
 async def send_data_to_clients():
     while True:        
-        print("Server is running")
-        
         # Map over HTML elements of the dashboard
         package = {
             'dashboard_manual': shared_state.dashboard_manual,
@@ -66,17 +74,31 @@ async def handle_mqtt_messages(client):
     async for message in client.messages:
         print(message.payload)
 
+async def arduino():
+    while True:
+        random_value = random.randint(0, 100)
+        string = f'{{"valve":"{random_value}"}}'
+        
+        print(ser.readline())
+        # ser.write(string.encode())
+        await asyncio.sleep(0.5)
+        # print(ser.readline())
+        # print(string)
+
 
 async def main():
     # Start the web server and the MQTT client
     server = websockets.serve(handle_client, "localhost", 8765)
     async with aiomqtt.Client("broker.hivemq.com", 1883) as client:
         mqtt_task = asyncio.create_task(handle_mqtt_messages(client))
-        await asyncio.gather(server, send_data_to_clients(), mqtt_task)
+        arduino_task = asyncio.create_task(arduino())
+        await asyncio.gather(server, send_data_to_clients(), mqtt_task, arduino_task)
+
 
 # Changed loop type to run the server on Windows
-if sys.platform.lower() == "win32" or os.name.lower() == "nt":
-    from asyncio import set_event_loop_policy, WindowsSelectorEventLoopPolicy
-    set_event_loop_policy(WindowsSelectorEventLoopPolicy())
+# if sys.platform.lower() == "win32" or os.name.lower() == "nt":
+#     from asyncio import set_event_loop_policy, WindowsSelectorEventLoopPolicy
+#     set_event_loop_policy(WindowsSelectorEventLoopPolicy())
+
 
 asyncio.run(main())

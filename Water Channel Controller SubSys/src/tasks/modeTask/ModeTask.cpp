@@ -13,35 +13,39 @@ void ModeTask::tick() {
     switch (modeState)
     {
     case ModeState::MANUAL : {
-            int potValue = this->sys->getPotentiometer()->getValue();
-            
-            /* set valve position */
-            int valveValue = map(potValue, 0, 100, CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE);
+        int potValue = this->sys->getPotentiometer()->getValue();
+        
+        /* set valve position */
+        int valveValue = map(potValue, 0, 100, CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE);
 
-            /* show on lcd valve openening value */
-            displayInfoOnLcd(potValue);
+        /* show on lcd valve openening value */
+        displayInfoOnLcd(potValue);
 
-            /* set gate opening */
-            this->sys->getServoMotor()->setPosition(valveValue);
+        /* set gate opening */
+        this->sys->getServoMotor()->setPosition(valveValue);
 
-            char buffer[100];
-            String state = this->sys->isManuelMode() ? "true" : "false";
-            uint8_t valvePos = map(this->sys->getServoMotor()->getPosition(), CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE, 0, 100);
-            sprintf(buffer, "{ \"manual_control\": \"%s\", \"valve\": \"%d\" }", String(state).c_str(), valvePos);
-            Serial.println(buffer);
+        char buffer[100];
+        String state = this->sys->isManuelMode() ? "true" : "false";
+        uint8_t valvePos = map(this->sys->getServoMotor()->getPosition(), CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE, 0, 100);
+        sprintf(buffer, "{ \"manual_control\": \"%s\", \"valve\": \"%d\" }", String(state).c_str(), valvePos);
+        Serial.println(buffer);
 
 
-            if (sys->isManuelMode() == false) {
-                modeState = ModeState::AUTO;
-                this->sys->getLcd()->clearScreen();
-                this->sys->getLcd()->setPosition(0, 0);
-                this->sys->getLcd()->displayText("AUTO");
-            }    
-        }
-        break;
-    case ModeState::AUTO :
+        if (sys->isManuelMode() == false) {
+            modeState = ModeState::AUTO;
+            this->sys->getLcd()->clearScreen();
+            this->sys->getLcd()->setPosition(0, 0);
+            this->sys->getLcd()->displayText("AUTO");
+        }    
+    }
+    break;
+    case ModeState::AUTO : {
+        String str = Serial.readString();
+        Serial.println(str);
         if (MsgService.isMsgAvailable()) {
-            Msg* msg = MsgService.receiveMsg();    
+            digitalWrite(10, LOW);
+            Msg* msg = MsgService.receiveMsg();
+            // Serial.println(msg->getContent());
             deserializeJson(doc, msg->getContent());
             int valveValue = doc["valve"];
             
@@ -52,6 +56,9 @@ void ModeTask::tick() {
             valveValue = map(valveValue, 0, 100, CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE);
             this->sys->getServoMotor()->setPosition(valveValue);
             delete msg;
+        } else {
+            digitalWrite(10, HIGH);
+            
         }
 
         if (sys->isManuelMode() == true) {
@@ -60,7 +67,8 @@ void ModeTask::tick() {
             this->sys->getLcd()->setPosition(0, 0);
             this->sys->getLcd()->displayText("MANUAL");
         }
-        break;
+    }
+    break;
     default:
         break;
     }
