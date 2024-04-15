@@ -40,13 +40,14 @@ void ModeTask::tick() {
     }
     break;
     case ModeState::AUTO : {
-        String str = Serial.readString();
-        Serial.println(str);
-        if (MsgService.isMsgAvailable()) {
-            digitalWrite(10, LOW);
-            Msg* msg = MsgService.receiveMsg();
-            // Serial.println(msg->getContent());
-            deserializeJson(doc, msg->getContent());
+        String string;
+        if (Serial.available() > 0)
+        {
+            digitalWrite(10, HIGH);
+            string = Serial.readString();
+            StaticJsonDocument<200> doc;
+
+            deserializeJson(doc, string);
             int valveValue = doc["valve"];
             
             /* show on lcd valve openening value */
@@ -55,11 +56,29 @@ void ModeTask::tick() {
             /* set valve position */
             valveValue = map(valveValue, 0, 100, CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE);
             this->sys->getServoMotor()->setPosition(valveValue);
-            delete msg;
+
         } else {
-            digitalWrite(10, HIGH);
-            
+            digitalWrite(10, LOW);
         }
+        
+
+        // if (MsgService.isMsgAvailable()) {
+        //     digitalWrite(10, LOW);
+        //     Msg* msg = MsgService.receiveMsg();
+        //     // Serial.println(msg->getContent());
+        //     deserializeJson(doc, msg->getContent());
+        //     int valveValue = doc["valve"];
+            
+        //     /* show on lcd valve openening value */
+        //     displayInfoOnLcd(valveValue);
+
+        //     /* set valve position */
+        //     valveValue = map(valveValue, 0, 100, CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE);
+        //     this->sys->getServoMotor()->setPosition(valveValue);
+        //     delete msg;
+        // } else {
+        //     digitalWrite(10, HIGH);   
+        // }
 
         if (sys->isManuelMode() == true) {
             modeState = ModeState::MANUAL;

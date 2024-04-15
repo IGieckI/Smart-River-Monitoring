@@ -11,18 +11,21 @@ SubSys *sys;
 void setup() {
     Serial.begin(9600);
     sys = new SubSys();
-    Serial.begin(9600);
     scheduler.init(100);
 
     Task *modeSetterTask = new ModeSetterTask(100, sys);
     modeSetterTask->setName("ModeSetterTask");
     scheduler.addTask(modeSetterTask);
 
-    Task *modeTask = new ModeTask(500, sys);
+    Task *modeTask = new ModeTask(100, sys);
     modeTask->setName("ModeTask");
     scheduler.addTask(modeTask);
 }
 
 void loop() {
     scheduler.schedule();
+    // if(Serial.available() > 0)
+    // {
+    //     digitalWrite(10, HIGH);
+    // }
 }

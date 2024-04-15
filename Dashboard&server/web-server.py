@@ -30,6 +30,7 @@ for p in ports:
     print (p)
 
 ser = serial.Serial(ports[2].device, 9600)
+
 time.sleep(2)
 
 # Main loop to send data to connected dashboards
@@ -76,14 +77,26 @@ async def handle_mqtt_messages(client):
 
 async def arduino():
     while True:
-        random_value = random.randint(0, 100)
-        string = f'{{"valve":"{random_value}"}}'
-        
-        print(ser.readline())
-        # ser.write(string.encode())
-        await asyncio.sleep(0.5)
-        # print(ser.readline())
-        # print(string)
+        if ser.in_waiting > 0:
+            data = ser.readline().decode('utf-8').strip()
+            print(data)
+            print('Data received from Arduino')
+            # manualControl = json.loads(data)['manual_control']
+            # if manualControl == 'false':
+            #     # print('Manual control is off')
+            #     random_value = random.randint(0, 100)
+            #     data = json.dumps({'valve': random_value})
+            #     print(data)
+            #     ser.write(data.encode('utf-8'))
+        else:
+            print('Data not received from Arduino')
+            random_value = random.randint(0, 100)
+            # data = json.dumps({'valve':random_value})
+            my_string = '{"valve":"' + str(random_value) + '"}'
+            ser.write(my_string.encode())
+            print(my_string.encode())
+            time.sleep(0.05)
+        await asyncio.sleep(1)
 
 
 async def main():
