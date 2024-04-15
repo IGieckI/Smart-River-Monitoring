@@ -76,14 +76,22 @@ async def handle_mqtt_messages(client):
 
 async def arduino():
     while True:
-        random_value = random.randint(0, 100)
-        string = f'{{"valve":"{random_value}"}}'
-        
-        print(ser.readline())
-        # ser.write(string.encode())
-        await asyncio.sleep(0.5)
-        # print(ser.readline())
-        # print(string)
+        # Read data from the serial port
+        print("ok")
+        if ser.in_waiting > 0:
+            random_value = random.randint(0, 100)
+            string = f'{{"valve":"{random_value}"}}'
+            ser.write(string)
+
+        await asyncio.sleep(1)
+            # dataJson = json.loads(data)
+            # if dataJson['manual_control'] == "false":
+            #     random_value = random.randint(0, 100)
+            #     string = f'{{"valve":"{random_value}"}}'
+            #     ser.write(string.encode('utf-8'))
+            #     print(string)
+            # else:
+            #     print(data)
 
 
 async def main():
