@@ -1,4 +1,4 @@
-#include <Arduino.h>
+#include <Arduino.h> 
 #include "Config.h"
 #include "Scheduler.h"
 #include "model/SubSys.h"
@@ -9,7 +9,7 @@ Scheduler scheduler;
 SubSys *sys;
 
 void setup() {
-    
+    Serial.begin(115200);
     sys = new SubSys();
     scheduler.init(100);
 

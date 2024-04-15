@@ -6,7 +6,6 @@ ModeTask::ModeTask(int period, SubSys *sys) : Task(period, sys) {
     this->sys->getLcd()->setPosition(0, 0);
     this->sys->getLcd()->displayText("AUTO");
     MsgService.init();
-    Serial.begin(115200);
 }
 
 void ModeTask::tick() {
@@ -19,8 +18,6 @@ void ModeTask::tick() {
         /* set valve position */
         int valveValue = map(potValue, 0, 100, CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE);
 
-        /* show on lcd valve openening value */
-        displayInfoOnLcd(potValue);
 
         /* set gate opening */
         this->sys->getServoMotor()->setPosition(valveValue);
