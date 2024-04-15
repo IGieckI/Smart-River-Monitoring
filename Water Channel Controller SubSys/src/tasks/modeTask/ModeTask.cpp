@@ -13,6 +13,7 @@ void ModeTask::tick() {
     switch (modeState)
     {
     case ModeState::MANUAL : {
+        digitalWrite(10, LOW);
         int potValue = this->sys->getPotentiometer()->getValue();
         
         /* set valve position */
@@ -24,6 +25,7 @@ void ModeTask::tick() {
         /* set gate opening */
         this->sys->getServoMotor()->setPosition(valveValue);
 
+        /* send data on terminal */
         char buffer[100];
         String state = this->sys->isManuelMode() ? "true" : "false";
         uint8_t valvePos = map(this->sys->getServoMotor()->getPosition(), CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE, 0, 100);
@@ -40,12 +42,19 @@ void ModeTask::tick() {
     }
     break;
     case ModeState::AUTO : {
-        String str = Serial.readString();
-        Serial.println(str);
+        char buffer[100];
+        String state = this->sys->isManuelMode() ? "true" : "false";
+        uint8_t valvePos = map(this->sys->getServoMotor()->getPosition(), CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE, 0, 100);
+        sprintf(buffer, "{ \"manual_control\": \"%s\", \"valve\": \"%d\" }", String(state).c_str(), valvePos);
+        Serial.println(buffer);
+        // String str = Serial.readString();
+
+        digitalWrite(10, HIGH);
+        // Serial.println(str);
+
         if (MsgService.isMsgAvailable()) {
-            digitalWrite(10, LOW);
             Msg* msg = MsgService.receiveMsg();
-            // Serial.println(msg->getContent());
+            digitalWrite(10, LOW);
             deserializeJson(doc, msg->getContent());
             int valveValue = doc["valve"];
             
@@ -57,8 +66,7 @@ void ModeTask::tick() {
             this->sys->getServoMotor()->setPosition(valveValue);
             delete msg;
         } else {
-            digitalWrite(10, HIGH);
-            
+            // digitalWrite(10, LOW);
         }
 
         if (sys->isManuelMode() == true) {
