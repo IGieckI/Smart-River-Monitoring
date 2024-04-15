@@ -9,7 +9,7 @@ Scheduler scheduler;
 SubSys *sys;
 
 void setup() {
-    Serial.begin(9600);
+    
     sys = new SubSys();
     scheduler.init(100);
 
@@ -24,8 +24,4 @@ void setup() {
 
 void loop() {
     scheduler.schedule();
-    // if(Serial.available() > 0)
-    // {
-    //     digitalWrite(10, HIGH);
-    // }
 }

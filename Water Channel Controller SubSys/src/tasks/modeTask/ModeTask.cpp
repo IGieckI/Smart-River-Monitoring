@@ -1,18 +1,19 @@
 #include "tasks/modeTask/ModeTask.h"
 
 ModeTask::ModeTask(int period, SubSys *sys) : Task(period, sys) {
-    this->modeState = AUTO;
+    this->modeState = ModeState::AUTO;
     this->sys->getLcd()->clearScreen();
     this->sys->getLcd()->setPosition(0, 0);
     this->sys->getLcd()->displayText("AUTO");
     MsgService.init();
-    this->sys->getServoMotor()->setPosition(CLOSE_GATE_DEGREE);
+    Serial.begin(115200);
 }
 
 void ModeTask::tick() {
     switch (modeState)
     {
     case ModeState::MANUAL : {
+        digitalWrite(10, LOW);
         int potValue = this->sys->getPotentiometer()->getValue();
         
         /* set valve position */
@@ -24,12 +25,10 @@ void ModeTask::tick() {
         /* set gate opening */
         this->sys->getServoMotor()->setPosition(valveValue);
 
-        char buffer[100];
-        String state = this->sys->isManuelMode() ? "true" : "false";
-        uint8_t valvePos = map(this->sys->getServoMotor()->getPosition(), CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE, 0, 100);
-        sprintf(buffer, "{ \"manual_control\": \"%s\", \"valve\": \"%d\" }", String(state).c_str(), valvePos);
-        Serial.println(buffer);
-
+        if (Serial.availableForWrite())
+        {
+            sendJson();
+        }
 
         if (sys->isManuelMode() == false) {
             modeState = ModeState::AUTO;
@@ -40,46 +39,35 @@ void ModeTask::tick() {
     }
     break;
     case ModeState::AUTO : {
-        String string;
-        if (Serial.available() > 0)
+        digitalWrite(10, HIGH);
+        if (Serial.availableForWrite())
         {
-            digitalWrite(10, HIGH);
-            string = Serial.readString();
-            StaticJsonDocument<200> doc;
-
-            deserializeJson(doc, string);
-            int valveValue = doc["valve"];
-            
-            /* show on lcd valve openening value */
-            displayInfoOnLcd(valveValue);
-
-            /* set valve position */
-            valveValue = map(valveValue, 0, 100, CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE);
-            this->sys->getServoMotor()->setPosition(valveValue);
-
-        } else {
-            digitalWrite(10, LOW);
+            sendJson();
         }
         
+        if (Serial.available() > 0)
+        {
+            digitalWrite(9, HIGH);
+            String string = Serial.readStringUntil('\n');
+            // Create a JSON buffer with enough capacity to hold the JSON object
+            StaticJsonDocument<200> doc;
 
-        // if (MsgService.isMsgAvailable()) {
-        //     digitalWrite(10, LOW);
-        //     Msg* msg = MsgService.receiveMsg();
-        //     // Serial.println(msg->getContent());
-        //     deserializeJson(doc, msg->getContent());
-        //     int valveValue = doc["valve"];
-            
-        //     /* show on lcd valve openening value */
-        //     displayInfoOnLcd(valveValue);
+            // Parse the JSON string and handle parsing errors
+            DeserializationError error = deserializeJson(doc, string);
+            if (error) {
+                Serial.print("deserializeJson() failed: ");
+                Serial.println(error.f_str());
+                return;
+            }
 
-        //     /* set valve position */
-        //     valveValue = map(valveValue, 0, 100, CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE);
-        //     this->sys->getServoMotor()->setPosition(valveValue);
-        //     delete msg;
-        // } else {
-        //     digitalWrite(10, HIGH);   
-        // }
-
+            // Extract the integer value associated with the "valve" key
+            int valveValue = doc["valve"];
+            int valveValueMapped = map(valveValue, 0, 100, CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE);
+            this->sys->getServoMotor()->setPosition(valveValueMapped);
+        } else {
+            digitalWrite(9, LOW);
+        }
+        
         if (sys->isManuelMode() == true) {
             modeState = ModeState::MANUAL;
             this->sys->getLcd()->clearScreen();
@@ -98,4 +86,20 @@ void ModeTask::displayInfoOnLcd(uint8_t val) {
     this->sys->getLcd()->displayText("Valve:");
     this->sys->getLcd()->displayText(String(val).c_str());
     this->sys->getLcd()->displayText("%");
+}
+
+void ModeTask::sendJson() {
+    String state = this->sys->isManuelMode() ? "true" : "false";
+    uint8_t valvePos = this->sys->getServoMotor()->getPosition();
+
+    StaticJsonDocument<200> doc;
+    doc["manual_control"] = state;
+    doc["valve"] = valvePos;
+
+    char jsonString[200]; // Allocate a buffer for the JSON string
+    serializeJson(doc, jsonString);
+
+    // sprintf(buffer, "{\"manual_control\":\"%s\",\"valve\":\"%d\"}", String(state).c_str(), valvePos);
+    Serial.println(jsonString);
+    Serial.flush();
 }

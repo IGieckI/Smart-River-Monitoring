@@ -29,7 +29,9 @@ ports = list(port_list.comports())
 for p in ports:
     print (p)
 
-ser = serial.Serial(ports[2].device, 9600)
+ser = serial.Serial(ports[2].device, 115200)
+ser.reset_input_buffer()
+ser.reset_output_buffer()
 
 time.sleep(2)
 
@@ -79,24 +81,33 @@ async def arduino():
     while True:
         if ser.in_waiting > 0:
             data = ser.readline().decode('utf-8').strip()
-            print(data)
-            print('Data received from Arduino')
-            # manualControl = json.loads(data)['manual_control']
-            # if manualControl == 'false':
-            #     # print('Manual control is off')
-            #     random_value = random.randint(0, 100)
-            #     data = json.dumps({'valve': random_value})
-            #     print(data)
-            #     ser.write(data.encode('utf-8'))
+            if data:
+                try:
+                    jsonData = json.loads(data)
+                    if jsonData['manual_control'] == 'false':
+                        if water_level < W1:
+                            valve = 0
+                        elif water_level > W1 and water_level < W2:
+                            valve = 25
+                        elif water_level > W3 and water_level < W4:
+                            valve = 50
+                        elif water_level > W5:
+                            valve = 100
+                            
+                        myJson = {"valve": valve}
+                        string = json.dumps(myJson).encode()
+                        ser.write(string)
+                        ser.flush()
+                    else:
+                        print(data)
+                except json.JSONDecodeError as e:
+                    print(f"Errore nel caricamento del JSON: {e}")
+            else:
+                print('Data not received from Arduino')
         else:
-            print('Data not received from Arduino')
-            random_value = random.randint(0, 100)
-            # data = json.dumps({'valve':random_value})
-            my_string = '{"valve":"' + str(random_value) + '"}'
-            ser.write(my_string.encode())
-            print(my_string.encode())
-            time.sleep(0.05)
-        await asyncio.sleep(1)
+            print('No data available')
+            
+        await asyncio.sleep(2)
 
 
 async def main():

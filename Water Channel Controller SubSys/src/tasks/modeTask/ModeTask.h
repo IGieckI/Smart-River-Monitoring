@@ -6,6 +6,7 @@
 
 class ModeTask : public Task {
     private:
+        String string;
         enum ModeState 
         {
             MANUAL,
@@ -14,6 +15,8 @@ class ModeTask : public Task {
         ModeState modeState;
 
         JsonDocument doc;
+
+        void sendJson();
 
         /**
          * @brief Display the valve opening value on the lcd.
