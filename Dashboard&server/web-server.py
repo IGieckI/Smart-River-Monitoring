@@ -114,7 +114,7 @@ async def arduino():
 async def main():
     # Start the web server and the MQTT client
     server = websockets.serve(handle_client, "localhost", 8765)
-    async with aiomqtt.Client("broker.hivemq.com", 1883) as client:
+    async with aiomqtt.Client("broker.mqtt-dashboard.com", 1883) as client:
         mqtt_task = asyncio.create_task(handle_mqtt_messages(client))
         await asyncio.gather(server, send_data_to_clients(), mqtt_task)
 
