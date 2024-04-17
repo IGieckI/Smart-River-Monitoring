@@ -15,7 +15,7 @@ void setup() {
     sys = new SubSys();
     scheduler.init(100);
 
-    Task *modeSetterTask = new ModeSetterTask(100, sys);
+    Task *modeSetterTask = new ModeSetterTask(75, sys);
     modeSetterTask->setName("ModeSetterTask");
     scheduler.addTask(modeSetterTask);
 

@@ -1,16 +1,13 @@
 #include "model/SubSys.h"
 
 SubSys::SubSys() {
-    distanceSensor = new Sonar(DISTANCE_SENSOR_ECHO_PIN, DISTANCE_SENSOR_TRIG_PIN, MAX_DISTANCE_TIME);
     servoMotor = new ServoMImpl(SERVO_PIN);
-    lcd = new LcdI2C(LCD_ADDR, 16, 2, A4, A5);
-    button = new ButtonImpl(7);
+    lcd = new LcdI2C(LCD_ADDR, LCD_COLS, LCD_ROWS, A4, A5);
+    button = new ButtonImpl(BUTTON_PIN);
     potentiometer = new PotentiometerImpl(A0);
     manuelMode = false;
-}
-
-int SubSys::getWaterDistance() {
-    return distanceSensor->getDistance();
+    this->greenLed = new Led(GREEN_LED_PIN);
+    this->redLed = new Led(RED_LED_PIN);
 }
 
 bool SubSys::isButtonPressed() {
@@ -43,4 +40,12 @@ void SubSys::setValveOpening(uint8_t val) {
 
 uint8_t SubSys::getValveOpening() {
     return valveOpening;
+}
+
+Led *SubSys::getGreenLed() {
+    return greenLed;
+}
+
+Led *SubSys::getRedLed() {
+    return redLed;
 }

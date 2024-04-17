@@ -5,14 +5,14 @@ ModeTask::ModeTask(int period, SubSys *sys) : Task(period, sys) {
     this->sys->getLcd()->clearScreen();
     this->sys->getLcd()->setPosition(0, 0);
     this->sys->getLcd()->displayText("AUTO");
-    MsgService.init();
 }
 
 void ModeTask::tick() {
     switch (modeState)
     {
     case ModeState::MANUAL : {
-        digitalWrite(10, LOW);
+        sys->getGreenLed()->switchLight(false);
+
         int potValue = this->sys->getPotentiometer()->getValue();
 
         sys->setValveOpening(potValue);
@@ -34,7 +34,8 @@ void ModeTask::tick() {
     }
     break;
     case ModeState::AUTO : {
-        digitalWrite(10, HIGH);
+        sys->getGreenLed()->switchLight(true);
+
         if (Serial.availableForWrite())
         {
             sendJson();
@@ -42,7 +43,7 @@ void ModeTask::tick() {
         
         if (Serial.available() > 0)
         {
-            digitalWrite(9, HIGH);
+            sys->getRedLed()->switchLight(true);
             String string = Serial.readStringUntil('\n');
             // Create a JSON buffer with enough capacity to hold the JSON object
             StaticJsonDocument<200> doc;
@@ -63,7 +64,7 @@ void ModeTask::tick() {
             int valveValueMapped = map(valveValue, 0, 100, CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE);
             this->sys->getServoMotor()->setPosition(valveValueMapped);
         } else {
-            digitalWrite(9, LOW);
+            sys->getRedLed()->switchLight(false);
         }
         
         if (sys->isManuelMode() == true) {
