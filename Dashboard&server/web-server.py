@@ -26,11 +26,11 @@ clients = {}
 water_level = 0
 
 # Water level thresholds
-W1 = 500 #mm
-W2 = 1000 #mm
-W3 = 1500 #mm
-W4 = 2000 #mm
-W5 = 2250 #mm
+W1 = 10 #cm
+W2 = 25 #cm
+W3 = 50 #cm
+W4 = 75 #cm
+W5 = 100 #cm
 
 # Shared instance of the system
 global shared_state
@@ -84,12 +84,15 @@ async def handle_client(websocket):
 # Handle incoming messages from the MQTT broker
 async def handle_mqtt_messages(client):
     global water_level
-    await client.subscribe("water_level")
+    await client.subscribe("water_level_iot_24h")
     async for message in client.messages:
-        print(message.payload)
-        water_level = json.loads(message.payload.decode())
+        messageDecoded = message.payload.decode()
+        jsonDataMessage = json.loads(messageDecoded)
+        water_level = jsonDataMessage['water_level']
+        await asyncio.sleep(0.5)
 
 async def arduino():
+    global water_level
     while True:
         if ser.in_waiting > 0:
             data = ser.readline().decode('utf-8').strip()
@@ -99,12 +102,14 @@ async def arduino():
                     if jsonData['manual_control'] == 'false':
                         if water_level < W1:
                             valve = 0
-                        elif water_level > W1 and water_level < W2:
+                        elif water_level > W1 and water_level <= W2:
                             valve = 25
-                        elif water_level > W3 and water_level < W4:
+                        elif water_level > W3 and water_level <= W4:
                             valve = 50
                         elif water_level > W5:
-                            valve = 100 
+                            valve = 100
+                        else:
+                            valve = 0
                         myJson = {"valve": valve}
                         string = json.dumps(myJson).encode()
                         ser.write(string)
