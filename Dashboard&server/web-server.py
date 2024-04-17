@@ -22,6 +22,16 @@ class SharedState:
 # Store the connected clients in a dictionary
 clients = {}
 
+# Water level
+water_level = 0
+
+# Water level thresholds
+W1 = 500 #mm
+W2 = 1000 #mm
+W3 = 1500 #mm
+W4 = 2000 #mm
+W5 = 2250 #mm
+
 # Shared instance of the system
 global shared_state
 shared_state = SharedState()
@@ -61,21 +71,23 @@ async def handle_client(websocket):
     clients[websocket.remote_address] = websocket
     try:
         async for message in websocket:
-                  print(message)
-                  update = json.loads(message)
-                  
-                  # IMPROVE SYSTEM MANAGEMENT
-                  
-                  shared_state.dashboard_manual = update['remote_control']
-                  shared_state.dashboard_open_value = update['valve']
+            print(message)
+            update = json.loads(message)
+            
+            # IMPROVE SYSTEM MANAGEMENT
+            
+            shared_state.dashboard_manual = update['remote_control']
+            shared_state.dashboard_open_value = update['valve']
     finally:
         del clients[websocket.remote_address]
         
 # Handle incoming messages from the MQTT broker
 async def handle_mqtt_messages(client):
+    global water_level
     await client.subscribe("water_level")
     async for message in client.messages:
         print(message.payload)
+        water_level = json.loads(message.payload.decode())
 
 async def arduino():
     while True:
@@ -92,8 +104,7 @@ async def arduino():
                         elif water_level > W3 and water_level < W4:
                             valve = 50
                         elif water_level > W5:
-                            valve = 100
-                            
+                            valve = 100 
                         myJson = {"valve": valve}
                         string = json.dumps(myJson).encode()
                         ser.write(string)
@@ -113,7 +124,7 @@ async def arduino():
 async def main():
     # Start the web server and the MQTT client
     server = websockets.serve(handle_client, "localhost", 8765)
-    async with aiomqtt.Client("broker.hivemq.com", 1883) as client:
+    async with aiomqtt.Client("broker.mqtt-dashboard.com", 1883) as client:
         mqtt_task = asyncio.create_task(handle_mqtt_messages(client))
         arduino_task = asyncio.create_task(arduino())
         await asyncio.gather(server, send_data_to_clients(), mqtt_task, arduino_task)
