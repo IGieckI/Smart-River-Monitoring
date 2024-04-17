@@ -36,3 +36,11 @@ bool SubSys::isManuelMode() {
 PotentiometerImpl *SubSys::getPotentiometer() {
     return potentiometer;
 }
+
+void SubSys::setValveOpening(uint8_t val) {
+    this->valveOpening = val;
+}
+
+uint8_t SubSys::getValveOpening() {
+    return valveOpening;
+}

@@ -14,10 +14,11 @@ void ModeTask::tick() {
     case ModeState::MANUAL : {
         digitalWrite(10, LOW);
         int potValue = this->sys->getPotentiometer()->getValue();
+
+        sys->setValveOpening(potValue);
         
         /* set valve position */
         int valveValue = map(potValue, 0, 100, CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE);
-
 
         /* set gate opening */
         this->sys->getServoMotor()->setPosition(valveValue);
@@ -29,9 +30,6 @@ void ModeTask::tick() {
 
         if (sys->isManuelMode() == false) {
             modeState = ModeState::AUTO;
-            this->sys->getLcd()->clearScreen();
-            this->sys->getLcd()->setPosition(0, 0);
-            this->sys->getLcd()->displayText("AUTO");
         }    
     }
     break;
@@ -59,6 +57,9 @@ void ModeTask::tick() {
 
             // Extract the integer value associated with the "valve" key
             int valveValue = doc["valve"];
+
+            sys->setValveOpening(valveValue);
+
             int valveValueMapped = map(valveValue, 0, 100, CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE);
             this->sys->getServoMotor()->setPosition(valveValueMapped);
         } else {
@@ -67,22 +68,12 @@ void ModeTask::tick() {
         
         if (sys->isManuelMode() == true) {
             modeState = ModeState::MANUAL;
-            this->sys->getLcd()->clearScreen();
-            this->sys->getLcd()->setPosition(0, 0);
-            this->sys->getLcd()->displayText("MANUAL");
         }
     }
     break;
     default:
         break;
     }
-}
-
-void ModeTask::displayInfoOnLcd(uint8_t val) {
-    this->sys->getLcd()->setPosition(2, 0);
-    this->sys->getLcd()->displayText("Valve:");
-    this->sys->getLcd()->displayText(String(val).c_str());
-    this->sys->getLcd()->displayText("%");
 }
 
 void ModeTask::sendJson() {

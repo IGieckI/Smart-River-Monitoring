@@ -30,7 +30,7 @@ W1 = 10 #cm
 W2 = 25 #cm
 W3 = 50 #cm
 W4 = 75 #cm
-W5 = 100 #cm
+W5 = 90 #cm
 
 # Shared instance of the system
 global shared_state
@@ -89,7 +89,7 @@ async def handle_mqtt_messages(client):
         messageDecoded = message.payload.decode()
         jsonDataMessage = json.loads(messageDecoded)
         water_level = jsonDataMessage['water_level']
-        await asyncio.sleep(0.5)
+        # await asyncio.sleep(0.5)
 
 async def arduino():
     global water_level

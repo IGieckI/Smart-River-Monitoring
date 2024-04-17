@@ -21,6 +21,7 @@ class SubSys {
         ButtonImpl *button;
         PotentiometerImpl *potentiometer;
         bool manuelMode;
+        uint8_t valveOpening;
     public:
         SubSys();
         int getWaterDistance();
@@ -30,6 +31,8 @@ class SubSys {
         void changeMode();
         bool isManuelMode();
         PotentiometerImpl *getPotentiometer();
+        void setValveOpening(uint8_t val);
+        uint8_t getValveOpening();
 };
 
 #endif

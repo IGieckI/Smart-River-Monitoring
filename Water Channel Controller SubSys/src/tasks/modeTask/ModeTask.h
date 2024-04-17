@@ -18,10 +18,6 @@ class ModeTask : public Task {
 
         void sendJson();
 
-        /**
-         * @brief Display the valve opening value on the lcd.
-        */
-        void displayInfoOnLcd(uint8_t val);
     public:
         ModeTask(int period, SubSys *sys);
         void tick();
