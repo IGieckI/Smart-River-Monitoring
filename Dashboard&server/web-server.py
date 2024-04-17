@@ -29,9 +29,9 @@ ports = list(port_list.comports())
 for p in ports:
     print (p)
 
-ser = serial.Serial(ports[2].device, 115200)
-ser.reset_input_buffer()
-ser.reset_output_buffer()
+#ser = serial.Serial(ports[2].device, 115200)
+#ser.reset_input_buffer()
+#ser.reset_output_buffer()
 
 time.sleep(2)
 
@@ -77,6 +77,7 @@ async def handle_mqtt_messages(client):
     async for message in client.messages:
         print(message.payload)
 
+'''
 async def arduino():
     while True:
         if ser.in_waiting > 0:
@@ -108,15 +109,14 @@ async def arduino():
             print('No data available')
             
         await asyncio.sleep(2)
-
+'''
 
 async def main():
     # Start the web server and the MQTT client
     server = websockets.serve(handle_client, "localhost", 8765)
     async with aiomqtt.Client("broker.hivemq.com", 1883) as client:
         mqtt_task = asyncio.create_task(handle_mqtt_messages(client))
-        arduino_task = asyncio.create_task(arduino())
-        await asyncio.gather(server, send_data_to_clients(), mqtt_task, arduino_task)
+        await asyncio.gather(server, send_data_to_clients(), mqtt_task)
 
 
 # Changed loop type to run the server on Windows
