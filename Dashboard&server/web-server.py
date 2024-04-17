@@ -73,7 +73,7 @@ async def handle_client(websocket):
         
 # Handle incoming messages from the MQTT broker
 async def handle_mqtt_messages(client):
-    await client.subscribe("water_level")
+    await client.subscribe("water_level_iot_24h")
     async for message in client.messages:
         print(message.payload)
 
