@@ -4,7 +4,7 @@
 #include "model/WaterLevelMonitor.h"
 
 #define MSG_BUFFER_SIZE  50
-#define MAX_WATER_LEVEL 50
+#define MAX_WATER_LEVEL 4000
 
 WaterLevelMonitor model(RED_LED_PIN, GREEN_LED_PIN, DISTANCE_SENSOR_ECHO_PIN, DISTANCE_SENSOR_TRIG_PIN, MAX_DISTANCE_TIME);
 

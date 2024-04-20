@@ -22,6 +22,6 @@
 
 #define MQTT_SERVER "broker.mqtt-dashboard.com"
 #define MQTT_PORT 1883
-#define MQTT_TOPIC "water_level"
+#define MQTT_TOPIC "water_level_iot_24h"
 
 #endif
