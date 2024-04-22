@@ -2,7 +2,9 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include "model/WaterLevelMonitor.h"
+
 #define MSG_BUFFER_SIZE  50
+#define MAX_WATER_LEVEL 50
 
 WaterLevelMonitor model(RED_LED_PIN, GREEN_LED_PIN, DISTANCE_SENSOR_ECHO_PIN, DISTANCE_SENSOR_TRIG_PIN, MAX_DISTANCE_TIME);
 
@@ -35,7 +37,7 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     
-    String clientId = String("esiot-2122-client-")+String(random(0xffff), HEX);
+    String clientId = String("esiot-2122-client-") + String(random(0xffff), HEX);
 
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
@@ -77,7 +79,7 @@ void loop() {
 	unsigned short waterLevel = model.getWaterLevel(MIN_DISTANCE);
 
 	unsigned long now = millis();
-	if (now - lastMsgTime > UPDATE_FREQUENCY) {
+	if (now - lastMsgTime > UPDATE_FREQUENCY && waterLevel < MAX_WATER_LEVEL) {
 		lastMsgTime = now;
 
 		snprintf (msg, MSG_BUFFER_SIZE, "{ \"water_level\": %ld }", waterLevel);
