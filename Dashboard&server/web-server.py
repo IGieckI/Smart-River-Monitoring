@@ -49,9 +49,9 @@ async def send_data_to_clients():
         }
         
         # Send the data to all connected clients
-        for client in clients:
+        for client in clients.values(): 
             try:
-                await client.value().send(json.dumps(package, default=str))
+                await client.send(json.dumps(package, default=str))  
             except websockets.exceptions.ConnectionClosed:
                 clients.pop(client)
         await asyncio.sleep(1)
@@ -61,13 +61,15 @@ async def handle_client(websocket):
     clients[websocket.remote_address] = websocket
     try:
         async for message in websocket:
-                  print(message)
-                  update = json.loads(message)
-                  
-                  # IMPROVE SYSTEM MANAGEMENT
-                  
-                  shared_state.dashboard_manual = update['remote_control']
-                  shared_state.dashboard_open_value = update['valve']
+            print(message)
+            update = json.loads(message)
+            
+            # IMPROVE SYSTEM MANAGEMENT
+            
+            shared_state.dashboard_manual = update['remote_control']
+            shared_state.current_valve_opening = update['valve']
+            shared_state.dashboard_open_value = update['valve']
+            shared_state.history.append(update['valve'])
     finally:
         del clients[websocket.remote_address]
         
