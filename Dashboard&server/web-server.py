@@ -82,9 +82,9 @@ async def handle_client(websocket):
             # IMPROVE SYSTEM MANAGEMENT
             
             shared_state.dashboard_manual = update['remote_control']
-            shared_state.current_valve_opening = update['valve']
+            print(shared_state.dashboard_manual)
             shared_state.dashboard_open_value = update['valve']
-            # shared_state.history.append(update['valve'])
+            print(shared_state.dashboard_open_value)
     finally:
         del clients[websocket.remote_address]
         
@@ -96,25 +96,22 @@ async def handle_mqtt_messages(client):
         messageDecoded = message.payload.decode()
         jsonDataMessage = json.loads(messageDecoded)
         water_level = jsonDataMessage['water_level']
-        # await asyncio.sleep(0.5)
+        await asyncio.sleep(0.5)
 
 async def arduino():
-    print("Arduino task started")
-    global water_level
+    # global water_level
     while True:
-        print("Arduino task running")
         # arduino send data to server any time
         if ser.in_waiting > 0:
-            data = ser.readline().decode()
+            data = ser.readline().decode().strip()
+            print(data)
             if data:
-                print(data)
                 try:
                     jsonData = json.loads(data)
                     # print(jsonData)
                     shared_state.hardware_manual = jsonData['manual_control']
                     # if the hardware is in AUTO MODE
                     if jsonData['manual_control'] == 'false':
-                        shared_state.current_status = 'Automatic'
                         # if the dashboard is in MANUAL MODE
                         if shared_state.dashboard_manual == True:
                             valve = shared_state.dashboard_open_value
@@ -135,8 +132,7 @@ async def arduino():
                         ser.write(string)
                         ser.flush()
                     else:
-                        shared_state.current_status = 'Manual'
-                        # print(data)
+                        print(data)
                 except json.JSONDecodeError as e:
                     print(f"Errore nel caricamento del JSON: {e}")
             else:
@@ -145,7 +141,6 @@ async def arduino():
             print('No data available')
             
         await asyncio.sleep(2)
-
 
 async def main():
     # Start the web server and the MQTT client
