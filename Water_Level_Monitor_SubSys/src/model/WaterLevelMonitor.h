@@ -14,7 +14,7 @@ class WaterLevelMonitor {
         WaterLevelMonitor(uint8_t redLedPin, uint8_t greenLedPin, uint8_t echoPin, uint8_t trigPin, int maxDistanceTime);
         void switchRedLed(bool state);
         void switchGreenLed(bool state);
-        unsigned short getWaterLevel(int minDistance);
+        unsigned short getWaterLevel();
 };
 
 #endif
