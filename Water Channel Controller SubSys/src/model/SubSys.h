@@ -17,7 +17,7 @@ class SubSys {
         LcdI2C *lcd;
         ButtonImpl *button;
         PotentiometerImpl *potentiometer;
-        bool manuelMode;
+        bool manualMode;
         uint8_t valveOpening;
         Led *greenLed;
         Led *redLed;
