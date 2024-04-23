@@ -37,6 +37,7 @@ W3 = 50 #cm
 W4 = 75 #cm
 W5 = 90 #cm
 
+
 # Shared instance of the system
 global shared_state
 shared_state = SharedState()
@@ -82,9 +83,7 @@ async def handle_client(websocket):
             # IMPROVE SYSTEM MANAGEMENT
             
             shared_state.dashboard_manual = update['remote_control']
-            print(shared_state.dashboard_manual)
             shared_state.dashboard_open_value = update['valve']
-            print(shared_state.dashboard_open_value)
     finally:
         del clients[websocket.remote_address]
         
@@ -96,51 +95,72 @@ async def handle_mqtt_messages(client):
         messageDecoded = message.payload.decode()
         jsonDataMessage = json.loads(messageDecoded)
         water_level = jsonDataMessage['water_level']
+        shared_state.history.append({"value": water_level, "datetime": datetime.now()})
+        # remove the first element of the list
+        if len(shared_state.history) > 50:
+            shared_state.history.pop(0) 
+        print(shared_state.history)
         await asyncio.sleep(0.5)
 
 async def arduino():
-    # global water_level
+    global water_level
+    global W1
+    global W2
+    global W3
+    global W4
     while True:
-        # arduino send data to server any time
         if ser.in_waiting > 0:
             data = ser.readline().decode().strip()
-            print(data)
             if data:
                 try:
                     jsonData = json.loads(data)
-                    # print(jsonData)
-                    shared_state.hardware_manual = jsonData['manual_control']
-                    # if the hardware is in AUTO MODE
-                    if jsonData['manual_control'] == 'false':
-                        # if the dashboard is in MANUAL MODE
+                    manual_control = jsonData['manual_control']
+                    shared_state.hardware_manual = manual_control
+                    if manual_control == True:
+                        vMan = jsonData['valve']
+                        shared_state.current_valve_opening = vMan
+                    else:
                         if shared_state.dashboard_manual == True:
-                            valve = shared_state.dashboard_open_value
+                            vAuto = shared_state.dashboard_open_value
                         else:
                             if water_level < W1:
-                                valve = 0
-                            elif water_level > W1 and water_level <= W2:
-                                valve = 25
-                            elif water_level > W3 and water_level <= W4:
-                                valve = 50
-                            elif water_level > W5:
-                                valve = 100
-                            else:
-                                valve = 0
-                        shared_state.current_valve_opening = valve
-                        myJson = {"valve": valve}
-                        string = json.dumps(myJson).encode()
+                                vAuto = 0
+                            elif water_level >= W1 and water_level < W2:
+                                vAuto = 25
+                            elif water_level >= W3 and water_level < W4:
+                                vAuto = 50
+                            elif water_level >= W4:
+                                vAuto = 100
+                        data4Arduino = {
+                            "valve": vAuto
+                        }
+                        shared_state.current_valve_opening = vAuto
+                        string = json.dumps(data4Arduino).encode()
                         ser.write(string)
                         ser.flush()
-                    else:
-                        print(data)
                 except json.JSONDecodeError as e:
                     print(f"Errore nel caricamento del JSON: {e}")
-            else:
-                print('Data not received from Arduino')
-        else:
-            print('No data available')
-            
-        await asyncio.sleep(2)
+            print(data)
+        await asyncio.sleep(0.05)
+
+async def system_status():
+    global water_level
+    global W1
+    global W2
+    global W3
+    global W4
+    while True:
+        if water_level < W1:
+            shared_state.current_status = 'ALARM TOO LOW'
+        elif water_level >= W1 and water_level < W2:
+            shared_state.current_status = 'NORMAL'
+        elif water_level >= W2 and water_level < W3:
+            shared_state.current_status = 'PRE ALARM TOO HIGH'
+        elif water_level >= W3 and water_level < W4:
+            shared_state.current_status = 'ALARM TOO HIGH'
+        elif water_level >= W4:
+            shared_state.current_status = 'ALARM TOO HIGH CRITIC'
+        await asyncio.sleep(0.5)
 
 async def main():
     # Start the web server and the MQTT client
@@ -148,7 +168,8 @@ async def main():
     async with aiomqtt.Client("broker.mqtt-dashboard.com", 1883) as client:
         arduino_task = asyncio.create_task(arduino())
         mqtt_task = asyncio.create_task(handle_mqtt_messages(client))
-        await asyncio.gather(server, send_data_to_clients(), mqtt_task, arduino_task)
+        system_status_task = asyncio.create_task(system_status())
+        await asyncio.gather(server, send_data_to_clients(), mqtt_task, arduino_task, system_status_task)
 
 
 # Changed loop type to run the server on Windows
