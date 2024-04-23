@@ -97,7 +97,7 @@ async def handle_mqtt_messages(client):
         water_level = jsonDataMessage['water_level']
         shared_state.history.append({"value": water_level, "datetime": datetime.now()})
         # remove the first element of the list
-        if len(shared_state.history) > 50:
+        if len(shared_state.history) > 20:
             shared_state.history.pop(0) 
         print(shared_state.history)
         await asyncio.sleep(0.5)
@@ -131,6 +131,8 @@ async def arduino():
                                 vAuto = 50
                             elif water_level >= W4:
                                 vAuto = 100
+                            else:
+                                vAuto = 0
                         data4Arduino = {
                             "valve": vAuto
                         }
