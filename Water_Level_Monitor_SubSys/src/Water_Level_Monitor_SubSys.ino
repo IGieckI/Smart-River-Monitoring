@@ -127,7 +127,6 @@ void setup()	{
 }
 
 void loop() {
-
 	if (!client.connected()) {        
 		model.switchGreenLed(false);
 		model.switchRedLed(true);
@@ -136,13 +135,12 @@ void loop() {
 
 	model.switchGreenLed(true);
 	model.switchRedLed(false);
-	
-	client.loop();
 
 	unsigned short waterLevel = model.getWaterLevel();
-
-	unsigned long now = millis();
-	if (now - lastMsgTime > waterLevel < warning_limit ? f1 : f2 && waterLevel < MAX_ERROR_DISTANCE) {
+    Serial.println(String("Water level: ") + waterLevel + String("warning limit: ") + warning_limit + String("f1: ") + f1 + String("f2: ") + f2);
+	
+    unsigned long now = millis();
+    if (now - lastMsgTime > (waterLevel < warning_limit ? f1 : f2) && waterLevel < MAX_ERROR_DISTANCE) {
 		lastMsgTime = now;
 
 		snprintf (msg, MSG_BUFFER_SIZE, "{ \"water_level\": %ld }", waterLevel);
@@ -151,4 +149,6 @@ void loop() {
 
 		client.publish(water_topic.c_str(), msg);
 	}
+
+    client.loop();
 }
