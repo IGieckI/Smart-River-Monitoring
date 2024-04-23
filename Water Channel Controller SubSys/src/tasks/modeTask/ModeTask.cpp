@@ -1,10 +1,8 @@
 #include "tasks/modeTask/ModeTask.h"
 
 ModeTask::ModeTask(int period, SubSys *sys) : Task(period, sys) {
-    this->modeState = ModeState::AUTO;
-    this->sys->getLcd()->clearScreen();
-    this->sys->getLcd()->setPosition(0, 0);
-    this->sys->getLcd()->displayText("AUTO");
+    this->modeState = ModeState::MANUAL;
+    sys->changeMode();
 }
 
 void ModeTask::tick() {
@@ -78,8 +76,8 @@ void ModeTask::tick() {
 }
 
 void ModeTask::sendJson() {
-    String state = this->sys->isManuelMode() ? "true" : "false";
-    uint8_t valvePos = this->sys->getServoMotor()->getPosition();
+    bool state = this->sys->isManuelMode();
+    uint8_t valvePos = this->sys->getServoMotor()->getPosition() * 100 / 170;
 
     StaticJsonDocument<200> doc;
     doc["manual_control"] = state;
@@ -88,7 +86,6 @@ void ModeTask::sendJson() {
     char jsonString[200]; // Allocate a buffer for the JSON string
     serializeJson(doc, jsonString);
 
-    // sprintf(buffer, "{\"manual_control\":\"%s\",\"valve\":\"%d\"}", String(state).c_str(), valvePos);
     Serial.println(jsonString);
     Serial.flush();
 }

@@ -15,15 +15,15 @@ void setup() {
     sys = new SubSys();
     scheduler.init(100);
 
-    Task *modeSetterTask = new ModeSetterTask(75, sys);
+    Task *modeSetterTask = new ModeSetterTask(100, sys);
     modeSetterTask->setName("ModeSetterTask");
     scheduler.addTask(modeSetterTask);
 
-    Task *modeTask = new ModeTask(100, sys);
+    Task *modeTask = new ModeTask(200, sys);
     modeTask->setName("ModeTask");
     scheduler.addTask(modeTask);
 
-    Task *displayInfoTask = new DisplayInfoTask(750, sys);
+    Task *displayInfoTask = new DisplayInfoTask(800, sys);
     displayInfoTask->setName("DisplayInfoTask");
     scheduler.addTask(displayInfoTask);
 }

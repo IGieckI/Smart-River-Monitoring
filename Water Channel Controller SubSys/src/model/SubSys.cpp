@@ -5,7 +5,7 @@ SubSys::SubSys() {
     lcd = new LcdI2C(LCD_ADDR, LCD_COLS, LCD_ROWS, A4, A5);
     button = new ButtonImpl(BUTTON_PIN);
     potentiometer = new PotentiometerImpl(A0);
-    manuelMode = false;
+    manualMode = false;
     this->greenLed = new Led(GREEN_LED_PIN);
     this->redLed = new Led(RED_LED_PIN);
 }
@@ -23,11 +23,11 @@ LcdI2C *SubSys::getLcd() {
 }
 
 void SubSys::changeMode() {
-    manuelMode = !manuelMode;
+    manualMode = !manualMode;
 }
 
 bool SubSys::isManuelMode() {
-    return manuelMode;
+    return manualMode;
 }
 
 PotentiometerImpl *SubSys::getPotentiometer() {
