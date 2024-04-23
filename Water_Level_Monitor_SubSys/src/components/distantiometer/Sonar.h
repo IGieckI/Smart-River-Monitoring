@@ -5,7 +5,7 @@
 
 class Sonar: public DistanceSensor {
     private:
-        const float speed_velocity = 0.034 / 2;
+        const float DISTANCE_CALCULATION_CONSTANT = 0.0343 / 2;
 
     public:
         Sonar(unsigned short echoPin, unsigned short trigPin, long timeOut);

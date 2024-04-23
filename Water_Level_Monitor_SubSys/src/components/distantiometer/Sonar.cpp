@@ -9,6 +9,6 @@ float Sonar::getDistance() {
     delayMicroseconds(10);
     digitalWrite(pins[0].getPinNumber(), LOW);
     long duration = pulseIn(pins[1].getPinNumber(), HIGH);
-    long distance= duration*speed_velocity;
+    long distance= duration * DISTANCE_CALCULATION_CONSTANT;
     return distance;
 }
