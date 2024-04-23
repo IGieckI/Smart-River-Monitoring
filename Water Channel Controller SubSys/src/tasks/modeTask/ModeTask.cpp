@@ -5,19 +5,20 @@ ModeTask::ModeTask(int period, SubSys *sys) : Task(period, sys) {
     this->sys->getLcd()->clearScreen();
     this->sys->getLcd()->setPosition(0, 0);
     this->sys->getLcd()->displayText("AUTO");
-    MsgService.init();
 }
 
 void ModeTask::tick() {
     switch (modeState)
     {
     case ModeState::MANUAL : {
-        digitalWrite(10, LOW);
+        sys->getGreenLed()->switchLight(false);
+
         int potValue = this->sys->getPotentiometer()->getValue();
+
+        sys->setValveOpening(potValue);
         
         /* set valve position */
         int valveValue = map(potValue, 0, 100, CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE);
-
 
         /* set gate opening */
         this->sys->getServoMotor()->setPosition(valveValue);
@@ -29,14 +30,12 @@ void ModeTask::tick() {
 
         if (sys->isManuelMode() == false) {
             modeState = ModeState::AUTO;
-            this->sys->getLcd()->clearScreen();
-            this->sys->getLcd()->setPosition(0, 0);
-            this->sys->getLcd()->displayText("AUTO");
         }    
     }
     break;
     case ModeState::AUTO : {
-        digitalWrite(10, HIGH);
+        sys->getGreenLed()->switchLight(true);
+
         if (Serial.availableForWrite())
         {
             sendJson();
@@ -44,7 +43,7 @@ void ModeTask::tick() {
         
         if (Serial.available() > 0)
         {
-            digitalWrite(9, HIGH);
+            sys->getRedLed()->switchLight(true);
             String string = Serial.readStringUntil('\n');
             // Create a JSON buffer with enough capacity to hold the JSON object
             StaticJsonDocument<200> doc;
@@ -59,30 +58,23 @@ void ModeTask::tick() {
 
             // Extract the integer value associated with the "valve" key
             int valveValue = doc["valve"];
+
+            sys->setValveOpening(valveValue);
+
             int valveValueMapped = map(valveValue, 0, 100, CLOSE_GATE_DEGREE, OPEN_GATE_DEGREE);
             this->sys->getServoMotor()->setPosition(valveValueMapped);
         } else {
-            digitalWrite(9, LOW);
+            sys->getRedLed()->switchLight(false);
         }
         
         if (sys->isManuelMode() == true) {
             modeState = ModeState::MANUAL;
-            this->sys->getLcd()->clearScreen();
-            this->sys->getLcd()->setPosition(0, 0);
-            this->sys->getLcd()->displayText("MANUAL");
         }
     }
     break;
     default:
         break;
     }
-}
-
-void ModeTask::displayInfoOnLcd(uint8_t val) {
-    this->sys->getLcd()->setPosition(2, 0);
-    this->sys->getLcd()->displayText("Valve:");
-    this->sys->getLcd()->displayText(String(val).c_str());
-    this->sys->getLcd()->displayText("%");
 }
 
 void ModeTask::sendJson() {
