@@ -118,8 +118,7 @@ void setup()	{
 
 	model.switchRedLed(true);
 	model.switchGreenLed(false);
-
-	setup_wifi();
+    
 	randomSeed(micros());
 
 	client.setServer(MQTT_SERVER, MQTT_PORT);
@@ -127,9 +126,11 @@ void setup()	{
 }
 
 void loop() {
-	if (!client.connected()) {        
+	if (!client.connected()) {
 		model.switchGreenLed(false);
 		model.switchRedLed(true);
+        
+        setup_wifi();
 		reconnect();
 	}
 
