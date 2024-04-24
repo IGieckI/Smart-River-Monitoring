@@ -32,10 +32,9 @@ water_level = 0
 
 # Water level thresholds
 W1 = 10 #cm
-W2 = 25 #cm
-W3 = 50 #cm
-W4 = 75 #cm
-W5 = 90 #cm
+W2 = 20 #cm
+W3 = 30 #cm
+W4 = 40 #cm
 
 
 # Shared instance of the system
@@ -98,8 +97,7 @@ async def handle_mqtt_messages(client):
         shared_state.history.append({"value": water_level, "datetime": datetime.now()})
         # remove the first element of the list
         if len(shared_state.history) > 20:
-            shared_state.history.pop(0) 
-        print(shared_state.history)
+            shared_state.history.pop(0)
         await asyncio.sleep(0.5)
 
 async def arduino():
@@ -125,7 +123,7 @@ async def arduino():
                         else:
                             if water_level < W1:
                                 vAuto = 0
-                            elif water_level >= W1 and water_level < W2:
+                            elif water_level >= W1 and water_level < W3:
                                 vAuto = 25
                             elif water_level >= W3 and water_level < W4:
                                 vAuto = 50
