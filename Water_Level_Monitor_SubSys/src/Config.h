@@ -10,7 +10,7 @@
 // Distance sensor settings
 #define MAX_DISTANCE_TIME 1000000l // microsecond time limit to wait for a distance sensor range
 #define MAX_DISTANCE 26
-#define MAX_ERROR_DISTANCE 30 // If distance > MAX_ERROR_DISTANCE, then the distance sensor is not reading correctly
+#define MAX_ERROR_DISTANCE 1000 // If distance > MAX_ERROR_DISTANCE, then the distance sensor is not reading correctly
 
 // Other Constants
 #define BAUD_RATE 115200
