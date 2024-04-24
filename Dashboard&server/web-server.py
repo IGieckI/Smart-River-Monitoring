@@ -8,6 +8,7 @@ import serial
 import serial.tools.list_ports as port_list
 import random
 import time
+import configparser
 
 class SharedState:
     """A class to store shared state between the server and the clients."""
@@ -27,28 +28,15 @@ class SharedState:
 # Store the connected clients in a dictionary
 clients = {}
 
-# Water level
-water_level = 0
-
-# Water level thresholds
-W1 = 10 #cm
-W2 = 20 #cm
-W3 = 30 #cm
-W4 = 40 #cm
-
+# Define variables to initialize the connected ESP
+CFG_FILE = "config.cfg"
+INITIALIZATION_MQTT_TOPIC = None
+W1 = W2 = W3 = W4 = None
 
 # Shared instance of the system
 global shared_state
 shared_state = SharedState()
-ports = list(port_list.comports())
-for p in ports:
-    print (p)
-
-ser = serial.Serial(ports[2].device, 115200)
-ser.reset_input_buffer()
-ser.reset_output_buffer()
-
-time.sleep(2)
+water_level = 0
 
 # Main loop to send data to connected dashboards
 async def send_data_to_clients():
@@ -77,17 +65,14 @@ async def handle_client(websocket):
     try:
         async for message in websocket:
             # print(message)
-            update = json.loads(message)
-            
-            # IMPROVE SYSTEM MANAGEMENT
-            
+            update = json.loads(message)            
             shared_state.dashboard_manual = update['remote_control']
             shared_state.dashboard_open_value = update['valve']
     finally:
         del clients[websocket.remote_address]
         
 # Handle incoming messages from the MQTT broker
-async def handle_mqtt_messages(client):
+async def handle_mqtt_data(client):
     global water_level
     await client.subscribe("water_level_iot_24h")
     async for message in client.messages:
@@ -100,12 +85,34 @@ async def handle_mqtt_messages(client):
             shared_state.history.pop(0)
         await asyncio.sleep(0.5)
 
-async def arduino():
-    global water_level
-    global W1
-    global W2
-    global W3
-    global W4
+async def send_mqtt_initialization_data(client):    
+    json_data = json.dumps(read_config_file(section="ESP"))
+    
+    client.publish(INITIALIZATION_MQTT_TOPIC, json_data)
+
+def read_config_file(cfg_file_name = CFG_FILE, section = None):
+    config = configparser.ConfigParser()
+    config.read("config.cfg")
+    data = {}
+    
+    print("Sections:" + config['SYSTEM'])
+    for c in config.get("SYSTEM"):
+        print(c)
+    input()
+
+    return []
+    if section is None:
+        for section in config.sections():
+            data[section] = dict(config.items(section))
+    else:
+        esp_data = dict(config.items(section))
+
+    return esp_data
+read_config_file()
+
+async def arduino(ser : serial.Serial):
+    global water_level, W1, W2, W3, W4
+    
     while True:
         if ser.in_waiting > 0:
             data = ser.readline().decode().strip()
@@ -165,9 +172,28 @@ async def system_status():
 async def main():
     # Start the web server and the MQTT client
     server = websockets.serve(handle_client, "localhost", 8765)
+
+    # Set global variables from the config file
+    config = read_config_file(section="SYSTEM")
+    INITIALIZATION_MQTT_TOPIC = config["INITIALIZATION_MQTT_TOPIC"]
+    W1 = config["W1"]
+    W2 = config["W2"]
+    W3 = config["W3"]
+    W4 = config["W4"]
+
+    # Looking for the arduino port
+    ports = list(port_list.comports())
+    ser = serial.Serial(ports[2].device, 115200)
+    ser.reset_input_buffer()
+    ser.reset_output_buffer()
+
+    time.sleep(2)
+
     async with aiomqtt.Client("broker.mqtt-dashboard.com", 1883) as client:
-        arduino_task = asyncio.create_task(arduino())
-        mqtt_task = asyncio.create_task(handle_mqtt_messages(client))
+        arduino_task = asyncio.create_task(arduino(ser))
+        mqtt_initialization_task = asyncio.create_task(send_mqtt_initialization_data(client))
+        mqtt_data_task = asyncio.create_task(handle_mqtt_data(client))
+
         system_status_task = asyncio.create_task(system_status())
         await asyncio.gather(server, send_data_to_clients(), mqtt_task, arduino_task, system_status_task)
 
