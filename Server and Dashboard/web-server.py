@@ -6,7 +6,6 @@ import sys
 import websockets
 import serial
 import serial.tools.list_ports as port_list
-import random
 import time
 import configparser
 import pathlib
@@ -60,7 +59,6 @@ async def handle_client(websocket):
     clients[websocket.remote_address] = websocket
     try:
         async for message in websocket:
-            # print(message)
             update = json.loads(message)            
             shared_state.dashboard_manual = update['remote_control']
             shared_state.dashboard_open_value = update['valve']
@@ -76,15 +74,17 @@ async def handle_mqtt_data(client):
         jsonDataMessage = json.loads(messageDecoded)
         water_level = jsonDataMessage['water_level']
         shared_state.history.append({"value": water_level, "datetime": datetime.now()})
-        # remove the first element of the list
+        
         if len(shared_state.history) > 20:
             shared_state.history.pop(0)
         await asyncio.sleep(0.5)
 
+# Send initialization data to the ESP
 async def mqtt_initialization_data_task(client):    
     json_data = json.dumps(read_config_file(section="ESP"))
     client.publish(INITIALIZATION_MQTT_TOPIC, json_data)
 
+# Read the configuration file
 def read_config_file(cfg_file_name = CFG_FILE, section = None):
     config = configparser.ConfigParser()
     config.read(cfg_file_name)
@@ -98,6 +98,7 @@ def read_config_file(cfg_file_name = CFG_FILE, section = None):
 
     return data
 
+# Communicate with the Arduino
 async def arduino(ser : serial.Serial):
     global water_level, W1, W2, W3, W4
     
@@ -138,6 +139,7 @@ async def arduino(ser : serial.Serial):
             print(data)
         await asyncio.sleep(0.05)
 
+# Check the system status
 async def system_status():
     global water_level, W1, W2, W3, W4
     
@@ -176,17 +178,16 @@ async def main():
 
     async with aiomqtt.Client("broker.mqtt-dashboard.com", 1883) as client:
         arduino_task = asyncio.create_task(arduino(ser))
-        mqtt_initialization_task = asyncio.create_task(send_mqtt_initialization_data(client))
+        mqtt_initialization_task = asyncio.create_task(mqtt_initialization_data_task(client))
         mqtt_data_task = asyncio.create_task(handle_mqtt_data(client))
 
         system_status_task = asyncio.create_task(system_status())
         await asyncio.gather(server, send_data_to_clients(), mqtt_initialization_data_task, arduino_task, system_status_task)
 
 
-# Changed loop type to run the server on Windows
+# Changed loop type to run the server on Windows, IF RUNNING ON DIFFERENCE OS, COMMENT THE FOLLOWING LINES
 if sys.platform.lower() == "win32" or os.name.lower() == "nt":
     from asyncio import set_event_loop_policy, WindowsSelectorEventLoopPolicy
     set_event_loop_policy(WindowsSelectorEventLoopPolicy())
-
 
 asyncio.run(main())

@@ -2,8 +2,6 @@ const socket = new WebSocket('ws://localhost:8765');
 
 socket.addEventListener('close',(event) => {
     location.reload();
-    
-    
 });
 
 // Handle incoming messages from the server
@@ -39,7 +37,6 @@ socket.addEventListener('message', (event) => {
     const canvas = document.getElementById('graph-container');
 
     if (window.myChart instanceof Chart) {
-        // If yes, destroy the existing chart
         window.myChart.destroy();
     }
 
@@ -71,7 +68,6 @@ socket.addEventListener('message', (event) => {
             }
         });
     
-    // Update your graph or other UI elements with the received data
     console.log('Received data:', data);
 });
 
@@ -91,10 +87,9 @@ function updateValveSettings() {
 }
 
 function enableControl(){
-    //console.log(document.querySelector('#manual-switch').checked);
-    if(document.querySelector('#manual-switch').checked){
+    if (document.querySelector('#manual-switch').checked) {
         document.getElementById("valve-input").disabled = false;
-    }else{
+    } else {
         document.getElementById("valve-input").disabled = true;
     }
 }
