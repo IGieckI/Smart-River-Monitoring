@@ -9,32 +9,28 @@ import serial.tools.list_ports as port_list
 import random
 import time
 import configparser
+import pathlib
 
 class SharedState:
-    """A class to store shared state between the server and the clients."""
+    """A class to store shared state between the server and the clients"""
     def __init__(self):
         self.dashboard_manual = False
         self.hardware_manual = False
         self.dashboard_open_value = -1
         self.current_valve_opening = -1
         self.current_status = 'Waiting for data...'
-        self.history = [
-            {"value": 10, "datetime": datetime(2024, 3, 30, 8, 0, 0)},
-            {"value": 15, "datetime": datetime(2024, 3, 30, 8, 15, 0)},
-            {"value": 20, "datetime": datetime(2024, 3, 30, 8, 30, 0)},
-            {"value": 25, "datetime": datetime(2024, 3, 30, 8, 45, 0)}
-        ]
+        self.history = []
 
 # Store the connected clients in a dictionary
 clients = {}
 
 # Define variables to initialize the connected ESP
-CFG_FILE = "config.cfg"
+CFG_FILE = pathlib.Path(__file__).parent.absolute() / "config.cfg"
 INITIALIZATION_MQTT_TOPIC = None
 W1 = W2 = W3 = W4 = None
+ARDUINO_PORT = 2
 
 # Shared instance of the system
-global shared_state
 shared_state = SharedState()
 water_level = 0
 
@@ -85,30 +81,22 @@ async def handle_mqtt_data(client):
             shared_state.history.pop(0)
         await asyncio.sleep(0.5)
 
-async def send_mqtt_initialization_data(client):    
+async def mqtt_initialization_data_task(client):    
     json_data = json.dumps(read_config_file(section="ESP"))
-    
     client.publish(INITIALIZATION_MQTT_TOPIC, json_data)
 
 def read_config_file(cfg_file_name = CFG_FILE, section = None):
     config = configparser.ConfigParser()
-    config.read("config.cfg")
+    config.read(cfg_file_name)
     data = {}
     
-    print("Sections:" + config['SYSTEM'])
-    for c in config.get("SYSTEM"):
-        print(c)
-    input()
-
-    return []
     if section is None:
         for section in config.sections():
             data[section] = dict(config.items(section))
     else:
-        esp_data = dict(config.items(section))
+        data = dict(config.items(section))
 
-    return esp_data
-read_config_file()
+    return data
 
 async def arduino(ser : serial.Serial):
     global water_level, W1, W2, W3, W4
@@ -151,11 +139,8 @@ async def arduino(ser : serial.Serial):
         await asyncio.sleep(0.05)
 
 async def system_status():
-    global water_level
-    global W1
-    global W2
-    global W3
-    global W4
+    global water_level, W1, W2, W3, W4
+    
     while True:
         if water_level < W1:
             shared_state.current_status = 'ALARM TOO LOW'
@@ -175,15 +160,15 @@ async def main():
 
     # Set global variables from the config file
     config = read_config_file(section="SYSTEM")
-    INITIALIZATION_MQTT_TOPIC = config["INITIALIZATION_MQTT_TOPIC"]
-    W1 = config["W1"]
-    W2 = config["W2"]
-    W3 = config["W3"]
-    W4 = config["W4"]
+    INITIALIZATION_MQTT_TOPIC = config["initialization_mqtt_topic"]
+    W1 = config["w1"]
+    W2 = config["w2"]
+    W3 = config["w3"]
+    W4 = config["w4"]
 
     # Looking for the arduino port
     ports = list(port_list.comports())
-    ser = serial.Serial(ports[2].device, 115200)
+    ser = serial.Serial(ports[ARDUINO_PORT].device, 115200)
     ser.reset_input_buffer()
     ser.reset_output_buffer()
 
@@ -195,13 +180,13 @@ async def main():
         mqtt_data_task = asyncio.create_task(handle_mqtt_data(client))
 
         system_status_task = asyncio.create_task(system_status())
-        await asyncio.gather(server, send_data_to_clients(), mqtt_task, arduino_task, system_status_task)
+        await asyncio.gather(server, send_data_to_clients(), mqtt_initialization_data_task, arduino_task, system_status_task)
 
 
 # Changed loop type to run the server on Windows
-# if sys.platform.lower() == "win32" or os.name.lower() == "nt":
-#     from asyncio import set_event_loop_policy, WindowsSelectorEventLoopPolicy
-#     set_event_loop_policy(WindowsSelectorEventLoopPolicy())
+if sys.platform.lower() == "win32" or os.name.lower() == "nt":
+    from asyncio import set_event_loop_policy, WindowsSelectorEventLoopPolicy
+    set_event_loop_policy(WindowsSelectorEventLoopPolicy())
 
 
 asyncio.run(main())
