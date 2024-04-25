@@ -49,6 +49,7 @@ void setup_wifi() {
 
 // Reconnect to the MQTT server, and exchange initialization data
 void reconnect() {
+
     // Connection to the MQTT server
     while (!client.connected()) {
         Serial.print("Attempting MQTT connection...");
@@ -126,6 +127,7 @@ void setup()	{
 }
 
 void loop() {
+    // Check if the client is connected to the MQTT server
 	if (!client.connected()) {
 		model.switchGreenLed(false);
 		model.switchRedLed(true);
@@ -134,6 +136,7 @@ void loop() {
 		reconnect();
 	}
 
+    // Transmit water level data
 	model.switchGreenLed(true);
 	model.switchRedLed(false);
 

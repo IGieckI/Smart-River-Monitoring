@@ -10,13 +10,13 @@
 // Distance sensor settings
 #define MAX_DISTANCE_TIME 1000000l // microsecond time limit to wait for a distance sensor range
 #define MAX_DISTANCE 26
-#define MAX_ERROR_DISTANCE 1000 // If distance > MAX_ERROR_DISTANCE, then the distance sensor is not reading correctly
+#define MAX_ERROR_DISTANCE 1000 // If distance > MAX_ERROR_DISTANCE, then the distance sensor is ignored (probably an error)
 
 // Other Constants
 #define BAUD_RATE 115200
 
-#define WIFI_SSID "Focantenna"//"SmartRiverMonitoring"
-#define WIFI_PASSWORD "zprv9600"//"password123"
+#define WIFI_SSID "SmartRiverMonitoring"
+#define WIFI_PASSWORD "password123"
 
 #define MQTT_SERVER "broker.mqtt-dashboard.com"
 #define MQTT_PORT 1883
