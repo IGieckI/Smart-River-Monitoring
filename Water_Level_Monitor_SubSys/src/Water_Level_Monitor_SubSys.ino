@@ -6,13 +6,18 @@
 
 #define MSG_BUFFER_SIZE  50
 
+// ESP hardware logical model
 WaterLevelMonitor model(RED_LED_PIN, GREEN_LED_PIN, DISTANCE_SENSOR_ECHO_PIN, DISTANCE_SENSOR_TRIG_PIN, MAX_DISTANCE_TIME);
 
+// Trasmission related variables
 WiFiClient espClient;
 PubSubClient client(espClient);
 
 unsigned long lastMsgTime = 0;
 char msg[MSG_BUFFER_SIZE];
+
+TaskHandle_t water_level_reading_task;
+TaskHandle_t water_level_trasmission_task;
 
 // Current state of the connection
 enum ConnectionState {
@@ -26,6 +31,7 @@ ConnectionState connectionState = DISCONNECTED;
 
 int warning_limit = 0, f1 = 0, f2 = 0;
 String water_topic;
+int current_water_level;
 
 // Connect to the WiFi network using credentials in the Config.h file
 void setup_wifi() {
@@ -113,8 +119,59 @@ void callback(char* topic, byte* payload, unsigned int length) {
     }
 }
 
-void setup()	{
-	Serial.begin(115200);
+// Task that reads the water level from the sensor
+void WaterLevelReadingTask( void * parameter ){
+    Serial.print("Task1 is running on core ");
+    Serial.println(xPortGetCoreID());
+
+    int* waterLevel = (int*)parameter;
+
+    while (true) {
+        delay(2000);
+        (*waterLevel) = model.getWaterLevel();
+    }
+}
+
+// Task that manage the connection and trasmission of water level data
+void WaterLevelTrasmissionTask( void * parameter ){
+    Serial.print("Task1 is running on core ");
+    Serial.println(xPortGetCoreID());
+
+    int* waterLevel = (int*)parameter;
+
+    while (true) {
+        // Check if the client is connected to the MQTT server
+        if (!client.connected()) {
+            model.switchGreenLed(false);
+            model.switchRedLed(true);
+            
+            setup_wifi();
+            reconnect();
+        }
+
+        // Transmit water level data
+        model.switchGreenLed(true);
+        model.switchRedLed(false);
+        
+        Serial.println(String("Water level: ") + *waterLevel + String("warning limit: ") + warning_limit + String("f1: ") + f1 + String("f2: ") + f2);
+        
+        unsigned long now = millis();
+        if (now - lastMsgTime > (*waterLevel < warning_limit ? f1 : f2) && *waterLevel < MAX_ERROR_DISTANCE) {
+            lastMsgTime = now;
+
+            snprintf (msg, MSG_BUFFER_SIZE, "{ \"water_level\": %ld }", *waterLevel);
+
+            Serial.println(String("Sending message: ") + msg);
+
+            client.publish(water_topic.c_str(), msg);
+        }
+
+        client.loop();
+    }
+}
+
+void setup() {
+    Serial.begin(115200);
     delay(100);
 
 	model.switchRedLed(true);
@@ -124,35 +181,13 @@ void setup()	{
 
 	client.setServer(MQTT_SERVER, MQTT_PORT);
     client.setCallback(callback);
+    
+    int* waterLevel = (int*)malloc(sizeof(int));
+    *waterLevel = 0;
+
+    // Create tasks
+    xTaskCreatePinnedToCore(WaterLevelReadingTask, "water_level_reading", 10000, &waterLevel, 3, &water_level_reading_task, 0);
+    xTaskCreatePinnedToCore(WaterLevelTrasmissionTask, "water_level_trasmission", 10000, &waterLevel, 2, &water_level_trasmission_task, 1);
 }
 
-void loop() {
-    // Check if the client is connected to the MQTT server
-	if (!client.connected()) {
-		model.switchGreenLed(false);
-		model.switchRedLed(true);
-        
-        setup_wifi();
-		reconnect();
-	}
-
-    // Transmit water level data
-	model.switchGreenLed(true);
-	model.switchRedLed(false);
-
-	unsigned short waterLevel = model.getWaterLevel();
-    Serial.println(String("Water level: ") + waterLevel + String("warning limit: ") + warning_limit + String("f1: ") + f1 + String("f2: ") + f2);
-	
-    unsigned long now = millis();
-    if (now - lastMsgTime > (waterLevel < warning_limit ? f1 : f2) && waterLevel < MAX_ERROR_DISTANCE) {
-		lastMsgTime = now;
-
-		snprintf (msg, MSG_BUFFER_SIZE, "{ \"water_level\": %ld }", waterLevel);
-
-		Serial.println(String("Sending message: ") + msg);
-
-		client.publish(water_topic.c_str(), msg);
-	}
-
-    client.loop();
-}
+void loop() {}
