@@ -157,22 +157,37 @@ async def system_status():
         await asyncio.sleep(0.5)
 
 async def main():
-    # Start the web server and the MQTT client
-    server = websockets.serve(handle_client, "localhost", 8765)
+    
+    try:
+        # Start the web server and the MQTT client
+        server = websockets.serve(handle_client, "localhost", 8765)
+        
+        # Set global variables from the config file
+        config = read_config_file(section="SYSTEM")
+        INITIALIZATION_MQTT_TOPIC = config["initialization_mqtt_topic"]
+        W1 = config["w1"]
+        W2 = config["w2"]
+        W3 = config["w3"]
+        W4 = config["w4"]
+        ARDUINO_PORT = int(config["arduino_port"])
 
-    # Set global variables from the config file
-    config = read_config_file(section="SYSTEM")
-    INITIALIZATION_MQTT_TOPIC = config["initialization_mqtt_topic"]
-    W1 = config["w1"]
-    W2 = config["w2"]
-    W3 = config["w3"]
-    W4 = config["w4"]
-
-    # Looking for the arduino port
-    ports = list(port_list.comports())
-    ser = serial.Serial(ports[ARDUINO_PORT].device, 115200)
-    ser.reset_input_buffer()
-    ser.reset_output_buffer()
+        # Looking for the arduino port
+        ports = list(port_list.comports())
+        ser = serial.Serial(ports[ARDUINO_PORT].device, 115200)
+        ser.reset_input_buffer()
+        ser.reset_output_buffer()
+    except FileNotFoundError:
+        print("Config file not found. Please check the file path.")
+        return
+    except KeyError:
+        print("One or more fields cannot be found in the config file. Please check the file.")
+        return
+    except IndexError:
+        print("Invalid ARDUINO_PORT. Please check the port number and make sure the arduino is connected correctly.")
+        return
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        return
 
     time.sleep(2)
 
