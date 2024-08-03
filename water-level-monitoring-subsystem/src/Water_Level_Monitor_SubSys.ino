@@ -3,6 +3,7 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include "model/WaterLevelMonitor.h"
+#include <FreeRTOS.h>
 
 #define MSG_BUFFER_SIZE  50
 
@@ -18,6 +19,9 @@ char msg[MSG_BUFFER_SIZE];
 
 TaskHandle_t water_level_reading_task;
 TaskHandle_t water_level_trasmission_task;
+
+//Create a mutex to protect the water level variable
+SemaphoreHandle_t waterLevelMutex;
 
 // Current state of the connection
 enum ConnectionState {
@@ -128,7 +132,9 @@ void WaterLevelReadingTask( void * parameter ){
 
     while (true) {
         delay(2000);
+        xSemaphoreTake(waterLevelMutex, portMAX_DELAY);
         (*waterLevel) = model.getWaterLevel();
+        xSemaphoreGive(waterLevelMutex);
     }
 }
 
@@ -156,6 +162,11 @@ void WaterLevelTrasmissionTask( void * parameter ){
         Serial.println(String("Water level: ") + *waterLevel + String("warning limit: ") + warning_limit + String("f1: ") + f1 + String("f2: ") + f2);
         
         unsigned long now = millis();
+        int currentLevel;
+        xSemaphoreTake(waterLevelMutex, portMAX_DELAY);
+        currentLevel = *waterLevel;
+        xSemaphoreGive(waterLevelMutex);
+
         if (now - lastMsgTime > (*waterLevel < warning_limit ? f1 : f2) && *waterLevel < MAX_ERROR_DISTANCE) {
             lastMsgTime = now;
 
@@ -184,6 +195,12 @@ void setup() {
     
     int* waterLevel = (int*)malloc(sizeof(int));
     *waterLevel = 0;
+
+    if (waterLevelMutex == NULL) {
+        while (true) {
+            Serial.println("Error creating the mutex");
+        }
+    }
 
     // Create tasks
     xTaskCreatePinnedToCore(WaterLevelReadingTask, "water_level_reading", 10000, &waterLevel, 3, &water_level_reading_task, 0);
